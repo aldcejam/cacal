@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  /* --- 60% - Fundo Profundo (O "Abismo") --- */
+  /* Baseado no Slate-950 e Slate-900 do seu código */
+  --color-theme-60: #020617;      /* Fundo da página */
+  --color-theme-60-alt: #0f172a;  /* Cabeçalhos e fundos alternativos */
+
+  /* --- 30% - Estrutura (Superfícies) --- */
+  /* Baseado no Slate-800 e Slate-700 */
+  --color-theme-30: #1e293b;      /* Cards e Paineis */
+  --color-theme-30-border: #334155; /* Bordas sutis */
+  --color-text-main: #e2e8f0;     /* Texto principal (Slate-200) */
+  --color-text-muted: #94a3b8;    /* Texto secundário (Slate-400) */
+
+  /* --- 10% - Destaque (Ação e Sucesso) --- */
+  /* Baseado no Emerald-500 e 600 */
+  --color-theme-10: #10b981;      
+  --color-theme-10-hover: #059669;
+
+  /* --- Cores Funcionais --- */
+  --color-danger: #ef4444;        /* Despesas/Erro */
+  --color-warning: #fbbf24;       /* Alertas (Amber-400) */
+
+  /* --- Fontes e Efeitos --- */
+  --font-sans: "Inter", sans-serif;
+  --shadow-neon: 0 0 20px -5px rgba(16, 185, 129, 0.3);
+}
+
+/* Utilitários globais para garantir o fundo padrão */
+body {
+  background-color: var(--color-theme-60);
+  color: var(--color-text-main);
+  font-family: var(--font-sans);
+}
