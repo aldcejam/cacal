@@ -1,35 +1,79 @@
 @import "tailwindcss";
 
 @theme {
-  /* --- 60% - Fundo Profundo (O "Abismo") --- */
-  /* Baseado no Slate-950 e Slate-900 do seu código */
-  --color-theme-60: #020617;      /* Fundo da página */
-  --color-theme-60-alt: #0f172a;  /* Cabeçalhos e fundos alternativos */
+  --color-border: #2a3744;
+  --color-input: #2a3744;
+  --color-ring: #10b981;
+  --color-background: #0e131b;
+  --color-foreground: #f1f5f9;
+  
+  --color-primary: #10b981;
+  --color-primary-foreground: #f1f5f9;
+  
+  --color-secondary: #1f2937;
+  --color-secondary-foreground: #f1f5f9;
+  
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #f1f5f9;
+  
+  --color-muted: #2a3744;
+  --color-muted-foreground: #94a3b8;
+  
+  --color-accent: #10b981;
+  --color-accent-foreground: #f1f5f9;
+  
+  --color-popover: #1f2937;
+  --color-popover-foreground: #f1f5f9;
+  
+  --color-card: #1f2937;
+  --color-card-foreground: #f1f5f9;
 
-  /* --- 30% - Estrutura (Superfícies) --- */
-  /* Baseado no Slate-800 e Slate-700 */
-  --color-theme-30: #1e293b;      /* Cards e Paineis */
-  --color-theme-30-border: #334155; /* Bordas sutis */
-  --color-text-main: #e2e8f0;     /* Texto principal (Slate-200) */
-  --color-text-muted: #94a3b8;    /* Texto secundário (Slate-400) */
-
-  /* --- 10% - Destaque (Ação e Sucesso) --- */
-  /* Baseado no Emerald-500 e 600 */
-  --color-theme-10: #10b981;      
-  --color-theme-10-hover: #059669;
-
-  /* --- Cores Funcionais --- */
-  --color-danger: #ef4444;        /* Despesas/Erro */
-  --color-warning: #fbbf24;       /* Alertas (Amber-400) */
-
-  /* --- Fontes e Efeitos --- */
-  --font-sans: "Inter", sans-serif;
-  --shadow-neon: 0 0 20px -5px rgba(16, 185, 129, 0.3);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
-/* Utilitários globais para garantir o fundo padrão */
+/* Base Variables from the provided design */
+:root {
+  --background: #151c26;
+  --foreground: #f1f5f9;
+
+  --card: #1f2937;
+  --card-foreground: #f1f5f9;
+
+  --popover: #1f2937;
+  --popover-foreground: #f1f5f9;
+
+  --primary: #10b981;
+  --primary-foreground: #f1f5f9;
+
+  --secondary: #1f2937;
+  --secondary-foreground: #f1f5f9;
+
+  --muted: #2a3744;
+  --muted-foreground: #94a3b8;
+
+  --accent: #10b981;
+  --accent-foreground: #f1f5f9;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #f1f5f9;
+
+  --border: #2a3744;
+  --input: #2a3744;
+  --ring: #10b981;
+
+  --radius: 0.75rem;
+}
+
+/* Base Styles */
 body {
-  background-color: var(--color-theme-60);
-  color: var(--color-text-main);
-  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.border-border {
+  border-color: var(--color-border);
 }
