@@ -1,409 +1,374 @@
-import React from 'react';
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
-} from 'recharts';
-import 'remixicon/fonts/remixicon.css';
+import React, { useState, useMemo } from 'react';
+// @ts-ignore
+import { transactionsData } from './mocks/transacao';
+// @ts-ignore
+import { creditCards, type Card } from './mocks/cartao';
 
 // ==========================================
-// 0. CONFIGURAÇÃO DE CORES (JS)
-// Para sincronizar gráficos com o CSS
+// 1. TYPES & INTERFACES
 // ==========================================
-const THEME = {
-  primary: '#10b981', // theme-10
-  danger: '#ef4444',  // danger
-  grid: '#334155',    // theme-30-border
-  text: '#94a3b8',    // text-muted
-  tooltipBg: '#1e293b', // theme-30
+ 
+interface Transaction {
+  id: string;
+  cardId: string;
+  description: string;
+  category: string;
+  value: number;
+  parcels: string;
+  total: number;
+}
+
+type SortKey = 'value' | 'parcels' | null;
+type SortDirection = 'asc' | 'desc';
+
+interface SortConfig {
+  key: SortKey;
+  direction: SortDirection;
+}
+
+// ==========================================
+// 2. HELPERS
+// ==========================================
+
+const darkenColor = (hex: string, percent: number) => {
+  let useHex = hex.replace(/^\s*#|\s*$/g, '');
+  if (useHex.length === 3) useHex = useHex.replace(/(.)/g, '$1$1');
+
+  const num = parseInt(useHex, 16);
+  const amt = Math.round(2.55 * percent);
+  const R = (num >> 16) - amt;
+  const G = ((num >> 8) & 0x00FF) - amt;
+  const B = (num & 0x0000FF) - amt;
+
+  return '#' + (
+    0x1000000 +
+    (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+    (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+    (B < 255 ? (B < 1 ? 0 : B) : 255)
+  ).toString(16).slice(1);
+};
+
+const getCategoryStyle = (category: string) => {
+  switch (category) {
+    case 'Streaming': return 'bg-violet-500/20 text-violet-300 border-violet-500/30';
+    case 'Alimentação': return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+    case 'Eletrônicos': return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+    case 'Transporte': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+    case 'Saúde': return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+    default: return 'bg-secondary text-secondary-foreground border-border';
+  }
 };
 
 // ==========================================
-// 1. DADOS MOCKADOS
+// 3. COMPONENTES LOCAIS
 // ==========================================
 
-const chartData = [
-  { name: 'Ago', Receitas: 11000, Despesas: 8500 },
-  { name: 'Set', Receitas: 12500, Despesas: 9000 },
-  { name: 'Out', Receitas: 11800, Despesas: 9800 },
-  { name: 'Nov', Receitas: 12900, Despesas: 9500 },
-  { name: 'Dez', Receitas: 13500, Despesas: 11500 },
-  { name: 'Jan', Receitas: 7700,  Despesas: 747 },
-];
+const Header = () => (
+  <header className="flex items-center justify-between mb-8 pt-2 md:pt-0 pl-12 md:pl-0">
+    {/* Padding e Margin ajustados para não colidir com o botão mobile flutuante */}
+    <div>
+      <h1 className="text-2xl font-bold text-foreground tracking-tight">Gerenciamento de Cartões</h1>
+      <p className="text-sm text-muted-foreground hidden sm:block">Acompanhe seus limites e faturas em tempo real.</p>
+    </div>
+    
+    <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-md shadow-emerald-900/20 cursor-pointer">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      <span className="hidden sm:inline">Nova Despesa</span>
+    </button>
+  </header>
+);
 
-const cardsData = [
-  {
-    id: 1,
-    name: 'Nubank Roxinho',
-    limit: 5000,
-    available: 2660,
-    closing: 15,
-    due: 22,
-    colorFrom: '#8b5cf6',
-    colorTo: '#7c3aed',
-    percent: 53.2
-  },
-  {
-    id: 2,
-    name: 'Inter Gold',
-    limit: 8000,
-    available: 3440,
-    closing: 10,
-    due: 17,
-    colorFrom: '#f59e0b',
-    colorTo: '#d97706',
-    percent: 43
-  },
-  {
-    id: 3,
-    name: 'C6 Bank',
-    limit: 3500,
-    available: 2220,
-    closing: 5,
-    due: 12,
-    colorFrom: '#10b981',
-    colorTo: '#059669',
-    percent: 63.4
-  }
-];
+const CreditCardList = ({ 
+  cards, 
+  selectedIds, 
+  onToggleCard 
+}: { 
+  cards: Card[], 
+  selectedIds: string[], 
+  onToggleCard: (id: string) => void 
+}) => {
+  return (
+    <section className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+          <h2 className="text-lg font-semibold text-foreground">Meus Cartões</h2>
+        </div>
+        {selectedIds.length > 0 && (
+           <span className="text-sm text-muted-foreground">{selectedIds.length} selecionado(s)</span>
+        )}
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {cards.map((card) => {
+          const isSelected = selectedIds.includes(card.id);
+          const primaryColor = card.bank.color; 
+          const secondaryColor = darkenColor(primaryColor, 30);
+          
+          const gradientStyle = {
+            background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
+          };
 
-const projectionData = [
-  { month: 'jan', value: 400, limit: 4600, percent: 8.0 },
-  { month: 'fev', value: 400, limit: 4600, percent: 8.0 },
-  { month: 'mar', value: 400, limit: 4600, percent: 8.0 },
-  { month: 'abr', value: 400, limit: 4600, percent: 8.0 },
-  { month: 'mai', value: 400, limit: 4600, percent: 8.0 },
-  { month: 'jun', value: 300, limit: 4700, percent: 6.0 },
-];
+          const opacityClass = isSelected 
+            ? 'opacity-100 scale-[1.02] ring-2 ring-offset-2 ring-offset-background ring-primary' 
+            : 'opacity-70 grayscale-[0.3] hover:grayscale-0 hover:opacity-100 hover:scale-[1.01]';
+          
+          return (
+            <div 
+              key={card.id}
+              onClick={() => onToggleCard(card.id)}
+              style={gradientStyle}
+              className={`rounded-xl p-5 text-white shadow-lg transition-all duration-300 cursor-pointer select-none border border-white/10 ${opacityClass}`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-lg">{card.bank.name} • {card.lastDigits}</h3>
+                {isSelected && <div className="w-2 h-2 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>}
+              </div>
+              <p className="text-xs uppercase tracking-wider opacity-70 mb-1 font-medium">Limite Total</p>
+              <p className="text-2xl font-bold mb-3 tracking-tight">R$ {card.limit.toLocaleString('pt-BR')}</p>
+              <div className="flex justify-between items-end">
+                  <p className="text-sm opacity-80 font-medium">Disponível: R$ {card.available.toLocaleString('pt-BR')}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
 
-const transactionsData = [
-  { id: 1, desc: 'Notebook Dell', category: 'Tecnologia', card: 'Nubank Roxinho', parcels: '3/12', value: 300, total: 3600, status: 'Pago', icon: 'ri-computer-line', color: 'blue' },
-  { id: 2, desc: 'Netflix Premium', category: 'Lazer', card: 'Inter Gold', parcels: '1/1', value: 55.90, total: null, status: 'Pago', icon: 'ri-gamepad-line', color: 'violet' },
-  { id: 3, desc: 'Academia SmartFit', category: 'Saúde', card: 'C6 Bank', parcels: '1/1', value: 89.90, total: null, status: 'Pago', icon: 'ri-heart-pulse-line', color: 'emerald' },
-  { id: 4, desc: 'Spotify Duo', category: 'Lazer', card: 'Nubank Roxinho', parcels: '1/1', value: 21.90, total: null, status: 'Pago', icon: 'ri-music-line', color: 'violet' },
-  { id: 5, desc: 'Restaurante', category: 'Alimentação', card: 'C6 Bank', parcels: '1/1', value: 180.00, total: null, status: 'Pago', icon: 'ri-restaurant-line', color: 'red' },
-  { id: 6, desc: 'Curso Udemy', category: 'Educação', card: 'Nubank Roxinho', parcels: '1/6', value: 100.00, total: 600, status: 'Pago', icon: 'ri-book-open-line', color: 'cyan' },
-];
-
-// ==========================================
-// 2. COMPONENTES DE UI (Base)
-// ==========================================
-
-const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  // Uso: bg-theme-30 (30%) com opacidade para efeito glass
-  <div className={`bg-theme-30/50 backdrop-blur-md border border-theme-30-border rounded-2xl p-6 shadow-xl ${className}`}>
-    {children}
+const EmptyState = () => (
+  <div className="flex flex-col items-center justify-center p-12 bg-card/50 border border-dashed border-border rounded-xl text-center animate-in fade-in zoom-in duration-300">
+    <div className="w-16 h-16 bg-secondary/50 rounded-full flex items-center justify-center mb-4">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-muted-foreground opacity-50">
+        <path d="M5 12h14"></path>
+        <path d="M12 5v14"></path>
+      </svg>
+    </div>
+    <h3 className="text-lg font-medium text-muted-foreground">Nenhum cartão selecionado</h3>
+    <p className="text-sm text-muted-foreground/60 max-w-sm mt-2">
+      Clique nos cartões acima para visualizar o detalhamento das despesas.
+    </p>
   </div>
 );
 
-const Badge = ({ color, children }: { color?: string; children: React.ReactNode }) => {
-  // Ajustado para usar opacidades das cores funcionais
-  const colors: Record<string, string> = {
-    blue: 'bg-blue-500/10 text-blue-400',
-    violet: 'bg-violet-500/10 text-violet-400',
-    emerald: 'bg-emerald-500/10 text-emerald-400',
-    red: 'bg-red-500/10 text-red-400',
-    cyan: 'bg-cyan-500/10 text-cyan-400',
-    default: 'bg-theme-30 text-text-muted'
-  };
-  const colorClass = colors[color ?? 'default'] || colors.default;
+const TransactionsTable = ({
+  transactions,
+  cards,
+  sortConfig,
+  onSort,
+  selectedIds,
+  selectedNames
+}: {
+  transactions: Transaction[],
+  cards: Card[],
+  sortConfig: SortConfig,
+  onSort: (key: SortKey) => void,
+  selectedIds: string[],
+  selectedNames: string
+}) => {
+  const totalValue = transactions.reduce((acc, t) => acc + t.value, 0);
+  const totalFull = transactions.reduce((acc, t) => acc + t.total, 0);
+
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap border border-white/5 ${colorClass}`}>
-      {children}
-    </span>
+    <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            {selectedIds.length > 0 ? `Despesas: ${selectedNames}` : 'Despesas'}
+        </h2>
+      </div>
+
+      {selectedIds.length === 0 ? <EmptyState /> : (
+        <div className="bg-card rounded-xl border border-border/50 overflow-hidden shadow-sm">
+          <div className="relative w-full overflow-auto">
+            <table className="w-full caption-bottom text-sm">
+              <thead className="[&_tr]:border-b">
+                <tr className="border-b border-border/50 transition-colors hover:bg-transparent bg-secondary/20">
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Cartão</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Descrição</th>
+                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Categoria</th>
+                  
+                  {/* Sortable Headers */}
+                  <th 
+                    className="h-12 px-4 align-middle font-medium text-muted-foreground text-right cursor-pointer hover:text-foreground transition-colors group"
+                    onClick={() => onSort('value')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      Valor
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${sortConfig.key === 'value' && sortConfig.direction === 'desc' ? 'rotate-180' : ''} ${sortConfig.key === 'value' ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>
+                        <path d="m6 9 6 6 6-6"/>
+                      </svg>
+                    </div>
+                  </th>
+                  <th 
+                    className="h-12 px-4 align-middle font-medium text-muted-foreground text-center cursor-pointer hover:text-foreground transition-colors group"
+                    onClick={() => onSort('parcels')}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Parcelas
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${sortConfig.key === 'parcels' && sortConfig.direction === 'desc' ? 'rotate-180' : ''} ${sortConfig.key === 'parcels' ? 'opacity-100' : 'opacity-40 group-hover:opacity-100'}`}>
+                        <path d="m6 9 6 6 6-6"/>
+                      </svg>
+                    </div>
+                  </th>
+                  <th className="h-12 px-4 align-middle font-medium text-muted-foreground text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody className="[&_tr:last-child]:border-0">
+                {transactions.length > 0 ? (
+                  transactions.map((t) => {
+                    const card = cards.find(c => c.id === t.cardId);
+                    return (
+                      <tr key={t.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+                        <td className="p-4 align-middle font-medium text-foreground">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: card?.bank.color }}></span>
+                            {card?.bank.name}
+                          </div>
+                        </td>
+                        <td className="p-4 align-middle text-foreground font-medium">{t.description}</td>
+                        <td className="p-4 align-middle">
+                          <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${getCategoryStyle(t.category)}`}>
+                            {t.category}
+                          </div>
+                        </td>
+                        <td className="p-4 align-middle text-right text-foreground font-medium">
+                          R$ {t.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="p-4 align-middle text-center text-muted-foreground tabular-nums">
+                          {t.parcels}
+                        </td>
+                        <td className="p-4 align-middle text-right text-foreground font-semibold">
+                          R$ {t.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                      Nenhuma despesa encontrada para os cartões selecionados.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              {transactions.length > 0 && (
+                <tfoot className="font-medium bg-secondary/20 border-t border-border/50">
+                  <tr>
+                    <td className="p-4 align-middle font-semibold text-foreground" colSpan={3}>Total</td>
+                    <td className="p-4 align-middle text-right font-bold text-primary">
+                      R$ {totalValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="p-4 align-middle"></td>
+                    <td className="p-4 align-middle text-right font-bold text-primary">
+                      R$ {totalFull.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </div>
+      )}
+    </section>
   );
 };
 
 // ==========================================
-// 3. COMPONENTES FUNCIONAIS (Features)
-// ==========================================
-
-const Header = () => (
-  // Uso: bg-theme-60-alt (Variação do 60%)
-  <header className="sticky top-0 z-40 bg-theme-60-alt/80 backdrop-blur-md border-b border-theme-30-border">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-theme-10/20 rounded-lg flex items-center justify-center">
-            <i className="ri-wallet-3-fill text-2xl text-theme-10"></i>
-          </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">FinanceFlow</h1>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex bg-theme-30 rounded-full p-1 gap-1">
-            <button className="px-4 py-1.5 rounded-full text-sm font-medium bg-theme-10 text-white shadow-lg shadow-theme-10/20">Minhas Finanças</button>
-            <button className="px-4 py-1.5 rounded-full text-sm font-medium text-text-muted hover:text-white transition-colors">Finanças do Grupo</button>
-          </div>
-          {/* Botão de Ação Principal (10%) com hover semântico */}
-          <button className="bg-theme-10 hover:bg-theme-10-hover text-white px-5 py-2.5 rounded-lg font-medium shadow-lg shadow-theme-10/20 flex items-center gap-2 transition-all active:scale-95">
-            <i className="ri-add-line text-lg"></i>
-            <span className="hidden sm:inline">Nova Despesa</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </header>
-);
-
-const KPIGrid = () => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-    {/* Card Especial (Destaque) - Mantendo gradient específico pois é identidade visual */}
-    <div className="rounded-2xl p-6 shadow-xl bg-gradient-to-br from-theme-10 to-theme-10-hover relative overflow-hidden text-white">
-      <div className="relative z-10">
-        <div className="flex justify-between mb-4">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm"><i className="ri-wallet-3-line text-2xl"></i></div>
-          <span className="text-emerald-50 font-medium text-sm">Saldo Atual</span>
-        </div>
-        <h3 className="text-3xl font-bold mb-1">R$ 6.952,30</h3>
-        <p className="text-emerald-50 text-sm">Positivo este mês</p>
-      </div>
-      <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-    </div>
-
-    {/* Card Receitas - Uso de text-muted (30%) e text-theme-10 (10%) */}
-    <GlassCard> 
-      <div className="flex justify-between mb-4">
-        <div className="w-12 h-12 bg-theme-10/10 rounded-xl flex items-center justify-center"><i className="ri-arrow-down-line text-2xl text-theme-10"></i></div>
-        <span className="text-text-muted text-sm font-medium">Receitas do Mês</span>
-      </div>
-      <h3 className="text-3xl font-bold text-white mb-1">R$ 7.700,00</h3>
-      <p className="text-text-muted text-sm">2 entrada(s)</p>
-    </GlassCard>
-
-    {/* Card Despesas - Uso de Cores Funcionais */}
-    <GlassCard>
-      <div className="flex justify-between mb-4">
-        <div className="w-12 h-12 bg-danger/10 rounded-xl flex items-center justify-center"><i className="ri-arrow-up-line text-2xl text-danger"></i></div>
-        <span className="text-text-muted text-sm font-medium">Despesas do Mês</span>
-      </div>
-      <h3 className="text-3xl font-bold text-white mb-1">R$ 747,70</h3>
-      <p className="text-text-muted text-sm">6 despesa(s)</p>
-    </GlassCard>
-  </div>
-);
-
-const FinancialChart = () => (
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <GlassCard className="lg:col-span-2">
-      <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-        <i className="ri-line-chart-line text-theme-10"></i> Fluxo de Caixa Mensal
-      </h3>
-      <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            {/* Usando constantes THEME para sincronia */}
-            <CartesianGrid strokeDasharray="3 3" stroke={THEME.grid} opacity={0.5} vertical={false} />
-            <XAxis dataKey="name" stroke={THEME.text} axisLine={false} tickLine={false} dy={10} />
-            <YAxis stroke={THEME.text} axisLine={false} tickLine={false} dx={-10} />
-            <Tooltip 
-              contentStyle={{ backgroundColor: THEME.tooltipBg, borderColor: THEME.grid, color: '#fff' }} 
-              itemStyle={{ color: '#fff' }}
-            />
-            <Legend verticalAlign="bottom" height={36} iconType="circle" />
-            <Line type="monotone" dataKey="Receitas" stroke={THEME.primary} strokeWidth={3} dot={{ r: 4, fill: THEME.primary }} activeDot={{ r: 6 }} />
-            <Line type="monotone" dataKey="Despesas" stroke={THEME.danger} strokeWidth={3} dot={{ r: 4, fill: THEME.danger }} activeDot={{ r: 6 }} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </GlassCard>
-
-    <GlassCard>
-      <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-        <i className="ri-information-line text-theme-10"></i> Resumo Financeiro
-      </h3>
-      <div className="space-y-4">
-        <div className="flex justify-between items-center p-4 bg-theme-30/50 rounded-xl border border-theme-30-border">
-          <span className="text-text-muted">Taxa de Economia</span>
-          <span className="text-xl font-bold text-theme-10">90.3%</span>
-        </div>
-        <div className="flex justify-between items-center p-4 bg-theme-30/50 rounded-xl border border-theme-30-border">
-          <span className="text-text-muted">Média Diária</span>
-          <span className="text-xl font-bold text-white">R$ 24,92</span>
-        </div>
-        <div className="flex justify-between items-center p-4 bg-theme-30/50 rounded-xl border border-theme-30-border">
-          <span className="text-text-muted">Fixas</span>
-          <span className="text-xl font-bold text-warning">8</span>
-        </div>
-      </div>
-    </GlassCard>
-  </div>
-);
-
-const CreditCardGrid = () => (
-  <div>
-    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-      <i className="ri-bank-card-line text-theme-10"></i> Gerenciamento de Cartões
-    </h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {cardsData.map((card) => (
-        <div 
-          key={card.id} 
-          className="rounded-2xl p-6 relative overflow-hidden transition-transform hover:scale-[1.02] cursor-pointer shadow-lg"
-          style={{ background: `linear-gradient(135deg, ${card.colorFrom}, ${card.colorTo})` }}
-        >
-          <div className="relative z-10 text-white">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold">{card.name}</h3>
-              <i className="ri-bank-card-2-fill text-2xl opacity-50"></i>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <p className="text-white/70 text-xs uppercase tracking-wider mb-1">Limite Total</p>
-                <p className="text-2xl font-bold">R$ {card.limit.toLocaleString('pt-BR')}</p>
-              </div>
-              
-              <div>
-                <div className="flex justify-between text-xs mb-2">
-                  <span className="text-white/80">Disponível: R$ {card.available.toLocaleString('pt-BR')}</span>
-                </div>
-                <div className="w-full bg-black/20 rounded-full h-2">
-                  <div 
-                    className="bg-white h-full rounded-full transition-all duration-1000" 
-                    style={{ width: `${card.percent}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="flex justify-between pt-2 border-t border-white/20 text-xs">
-                  <div><span className="opacity-70">Fecha:</span> <strong>Dia {card.closing}</strong></div>
-                  <div><span className="opacity-70">Vence:</span> <strong>Dia {card.due}</strong></div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const ProjectionTable = () => (
-  <GlassCard className="xl:col-span-1 h-fit">
-    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-      <i className="ri-calendar-line text-theme-10"></i> Projeção (Nubank)
-    </h3>
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm text-left">
-        <thead className="text-xs text-text-muted uppercase bg-theme-30/50">
-          <tr>
-            <th className="px-3 py-3 rounded-l-lg">Mês</th>
-            <th className="px-3 py-3 text-right">Valor</th>
-            <th className="px-3 py-3 text-right rounded-r-lg">%</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-theme-30-border">
-          {projectionData.map((row, idx) => (
-            <tr key={idx} className="hover:bg-theme-30-border/30 transition-colors">
-              <td className="px-3 py-3 font-medium text-white capitalize">{row.month}</td>
-              <td className="px-3 py-3 text-right text-danger">R$ {row.value},00</td>
-              <td className="px-3 py-3 text-right">
-                <span className="bg-theme-10/10 text-theme-10 px-2 py-0.5 rounded text-xs font-bold">
-                  {row.percent}%
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </GlassCard>
-);
-
-const TransactionList = () => (
-  <div className="xl:col-span-2 space-y-6">
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-        <i className="ri-list-check text-theme-10"></i> Lista de Despesas
-      </h2>
-      <div className="flex gap-2">
-          <select className="bg-theme-30 border border-theme-30-border text-text-muted text-sm rounded-lg focus:ring-theme-10 focus:border-theme-10 block p-2.5">
-            <option>Todas Categorias</option>
-            <option>Tecnologia</option>
-            <option>Lazer</option>
-          </select>
-          <select className="bg-theme-30 border border-theme-30-border text-text-muted text-sm rounded-lg focus:ring-theme-10 focus:border-theme-10 block p-2.5">
-            <option>Status: Todos</option>
-            <option>Pago</option>
-          </select>
-      </div>
-    </div>
-
-    <GlassCard className="p-0 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left text-text-muted">
-          <thead className="text-xs uppercase bg-theme-30/80 text-text-muted">
-            <tr>
-              <th className="px-6 py-4">Descrição</th>
-              <th className="px-6 py-4">Categoria</th>
-              <th className="px-6 py-4">Cartão</th>
-              <th className="px-6 py-4 text-center">Parc.</th>
-              <th className="px-6 py-4 text-right">Valor</th>
-              <th className="px-6 py-4 text-center">Status</th>
-              <th className="px-6 py-4 text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-theme-30-border">
-            {transactionsData.map((t) => (
-              <tr key={t.id} className="hover:bg-theme-30-border/30 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-${t.color}-500/10`}>
-                      <i className={`${t.icon} text-lg text-${t.color}-500`}></i>
-                    </div>
-                    <div>
-                      <div className="text-white font-medium">{t.desc}</div>
-                      {t.total && <div className="text-xs">Total: R$ {t.total}</div>}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <Badge color={t.color}>{t.category}</Badge>
-                </td>
-                <td className="px-6 py-4">{t.card}</td>
-                <td className="px-6 py-4 text-center font-medium text-white">{t.parcels}</td>
-                <td className="px-6 py-4 text-right">
-                    <div className="font-bold text-white">R$ {t.value.toFixed(2)}</div>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <span className="bg-theme-10/10 text-theme-10 px-2 py-1 rounded-full text-xs font-bold uppercase">
-                    {t.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                      <button className="p-2 hover:bg-theme-30-border rounded-lg transition-colors text-text-muted hover:text-white"><i className="ri-pencil-line"></i></button>
-                      <button className="p-2 hover:bg-danger/20 rounded-lg transition-colors text-text-muted hover:text-danger"><i className="ri-delete-bin-line"></i></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </GlassCard>
-  </div>
-);
-
-// ==========================================
-// 4. APP PRINCIPAL
+// 4. COMPONENTE PRINCIPAL (APP)
 // ==========================================
 
 export default function App() {
-  return (
-    // bg-theme-60 (Fundo padrão 60%)
-    <div className="min-h-screen bg-theme-60 text-text-main font-sans selection:bg-theme-10 selection:text-white">
-      <Header />
+  const [selectedCardIds, setSelectedCardIds] = useState<string[]>(
+    creditCards.length > 0 ? [creditCards[0].id] : []
+  ); 
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        <KPIGrid />
-        <FinancialChart />
-        <CreditCardGrid />
-        
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <ProjectionTable />
-          <TransactionList />
-        </div>
-      </main>
+  // --- Handlers ---
+
+  const handleToggleCard = (id: string) => {
+    setSelectedCardIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(cardId => cardId !== id);
+      }
+      return [...prev, id];
+    });
+  };
+
+  const handleSort = (key: SortKey) => {
+    if (!key) return;
+    setSortConfig(current => ({
+      key,
+      direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // --- Derived State ---
+
+  const filteredTransactions = useMemo(() => {
+    let data = transactionsData;
+
+    if (selectedCardIds.length > 0) {
+      data = data.filter(t => selectedCardIds.includes(t.cardId));
+    } else {
+      return []; 
+    }
+
+    if (sortConfig.key) {
+      data = [...data].sort((a, b) => {
+        let valA: number, valB: number;
+
+        if (sortConfig.key === 'value') {
+          valA = a.value;
+          valB = b.value;
+        } else {
+          valA = parseInt(a.parcels.split('/')[0]) || 1;
+          valB = parseInt(b.parcels.split('/')[0]) || 1;
+        }
+
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return data;
+  }, [selectedCardIds, sortConfig]);
+
+  const getSelectedCardNames = () => {
+    if (selectedCardIds.length === 0) return '';
+    if (selectedCardIds.length === creditCards.length) return 'Todos os Cartões';
+    
+    const names = creditCards
+      .filter(c => selectedCardIds.includes(c.id))
+      .map(c => `${c.bank.name} ${c.lastDigits}`);
+    
+    if (names.length <= 2) return names.join(' e ');
+    return `${names[0]} e mais ${names.length - 1}`;
+  };
+
+  return (
+    // Container Principal da Página
+    <div className="flex-1 p-6 md:p-8 overflow-y-auto w-full">
+      <Header />
+      
+      <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <CreditCardList 
+          cards={creditCards}
+          selectedIds={selectedCardIds}
+          onToggleCard={handleToggleCard}
+        />
+
+        <TransactionsTable 
+          transactions={filteredTransactions}
+          cards={creditCards}
+          sortConfig={sortConfig}
+          onSort={handleSort}
+          selectedIds={selectedCardIds}
+          selectedNames={getSelectedCardNames()}
+        />
+      </div>
     </div>
   );
 }
