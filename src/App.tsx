@@ -3,6 +3,10 @@ import React, { useState, useMemo } from 'react';
 import { transactionsData } from './mocks/transacao';
 // @ts-ignore
 import { creditCards, type Card } from './mocks/cartao';
+// @ts-ignore
+import { getUsuarioAtual, type Usuario } from './mocks/usuario';
+// @ts-ignore
+import { UserSelector } from './components/UserSelector';
 
 // ==========================================
 // 1. TYPES & INTERFACES
@@ -280,12 +284,35 @@ const TransactionsTable = ({
 // ==========================================
 
 export default function App() {
-  const [selectedCardIds, setSelectedCardIds] = useState<string[]>(
-    creditCards.length > 0 ? [creditCards[0].id] : []
-  ); 
+  const currentUser = getUsuarioAtual();
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
+    currentUser.isPrincipal ? [currentUser.id] : [currentUser.id]
+  );
+  const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]); 
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 
   // --- Handlers ---
+
+  const handleToggleUser = (userId: string) => {
+    setSelectedUserIds(prev => {
+      if (prev.includes(userId)) {
+        const newIds = prev.filter(id => id !== userId);
+        // Se desmarcou usuário, remove seus cartões da seleção
+        if (newIds.length > 0) {
+          const cardsToKeep = creditCards
+            .filter(c => newIds.includes(c.user.id))
+            .map(c => c.id);
+          setSelectedCardIds(prevCards => 
+            prevCards.filter(cardId => cardsToKeep.includes(cardId))
+          );
+        } else {
+          setSelectedCardIds([]);
+        }
+        return newIds;
+      }
+      return [...prev, userId];
+    });
+  };
 
   const handleToggleCard = (id: string) => {
     setSelectedCardIds(prev => {
@@ -306,9 +333,32 @@ export default function App() {
 
   // --- Derived State ---
 
+  // Filtrar cartões pelos usuários selecionados
+  const availableCards = useMemo(() => {
+    return creditCards.filter(card => selectedUserIds.includes(card.user.id));
+  }, [selectedUserIds]);
+
+  // Auto-selecionar primeiro cartão quando usuários mudam
+  useMemo(() => {
+    if (availableCards.length > 0 && selectedCardIds.length === 0) {
+      setSelectedCardIds([availableCards[0].id]);
+    } else if (availableCards.length > 0) {
+      // Manter apenas cartões dos usuários selecionados
+      const validCardIds = availableCards.map(c => c.id);
+      setSelectedCardIds(prev => prev.filter(id => validCardIds.includes(id)));
+    } else {
+      setSelectedCardIds([]);
+    }
+  }, [availableCards]);
+
   const filteredTransactions = useMemo(() => {
     let data = transactionsData;
 
+    // Primeiro filtrar por cartões dos usuários selecionados
+    const userCardIds = availableCards.map(c => c.id);
+    data = data.filter(t => userCardIds.includes(t.cardId));
+
+    // Depois filtrar por cartões selecionados
     if (selectedCardIds.length > 0) {
       data = data.filter(t => selectedCardIds.includes(t.cardId));
     } else {
@@ -334,13 +384,13 @@ export default function App() {
     }
 
     return data;
-  }, [selectedCardIds, sortConfig]);
+  }, [selectedCardIds, sortConfig, availableCards]);
 
   const getSelectedCardNames = () => {
     if (selectedCardIds.length === 0) return '';
-    if (selectedCardIds.length === creditCards.length) return 'Todos os Cartões';
+    if (selectedCardIds.length === availableCards.length) return 'Todos os Cartões';
     
-    const names = creditCards
+    const names = availableCards
       .filter(c => selectedCardIds.includes(c.id))
       .map(c => `${c.bank.name} ${c.lastDigits}`);
     
@@ -354,15 +404,21 @@ export default function App() {
       <Header />
       
       <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+        <UserSelector
+          selectedUserIds={selectedUserIds}
+          onToggleUser={handleToggleUser}
+          currentUser={currentUser}
+        />
+
         <CreditCardList 
-          cards={creditCards}
+          cards={availableCards}
           selectedIds={selectedCardIds}
           onToggleCard={handleToggleCard}
         />
 
         <TransactionsTable 
           transactions={filteredTransactions}
-          cards={creditCards}
+          cards={availableCards}
           sortConfig={sortConfig}
           onSort={handleSort}
           selectedIds={selectedCardIds}
