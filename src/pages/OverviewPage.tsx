@@ -34,26 +34,26 @@ const ResumoCards = ({ totalGastos, totalCartoes, totalLimite, totalDisponivel }
                 title="Gastos Recorrentes"
                 value={`R$ ${totalGastos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                 subtitle="Total mensal"
-                icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>}
+                icon={<i className="ri-calendar-check-line"></i>}
             />
             <MetricCard
                 title="Cartões"
                 value={totalCartoes}
                 subtitle="Total de cartões"
-                icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>}
+                icon={<i className="ri-bank-card-line"></i>}
             />
             <MetricCard
                 title="Limite Total"
                 value={`R$ ${totalLimite.toLocaleString('pt-BR')}`}
                 subtitle="Soma de todos os limites"
-                icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>}
+                icon={<i className="ri-dashboard-3-line"></i>}
             />
             <MetricCard
                 title="Disponível"
                 value={`R$ ${totalDisponivel.toLocaleString('pt-BR')}`}
                 subtitle="Crédito disponível"
-                icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>}
-                variant="default" // Could be tailored if needed
+                icon={<i className="ri-wallet-3-line"></i>}
+                variant="default"
             />
         </div>
     );

@@ -275,7 +275,7 @@ const TransactionList = () => (
                                 </td>
                                 <td className="px-6 py-4">
                                     {/* @ts-ignore */}
-                                    <Badge color={t.color}>{t.category}</Badge>
+                                    <Badge variant={t.color}>{t.category}</Badge>
                                 </td>
                                 <td className="px-6 py-4">{t.card}</td>
                                 <td className="px-6 py-4 text-center font-medium text-foreground">{t.parcels}</td>

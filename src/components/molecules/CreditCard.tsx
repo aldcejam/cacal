@@ -1,4 +1,5 @@
 import React from 'react';
+import { Typography } from '../atoms/Typography';
 
 // Using a simplified interface based on usage
 interface CardData {
@@ -42,45 +43,60 @@ const darkenColor = (hex: string, percent: number) => {
 
 export const CreditCard = ({ card, isSelected = false, onClick, showProgressBar = false }: CreditCardProps) => {
     const primaryColor = card.bank.color;
-    const secondaryColor = darkenColor(primaryColor, 30); // You might want to move darkenColor to a utility
+    const secondaryColor = darkenColor(primaryColor, 30);
 
     const gradientStyle = {
         background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`
     };
 
     const opacityClass = isSelected
-        ? 'opacity-100 scale-[1.02] ring-2 ring-offset-2 ring-offset-background ring-primary'
-        : 'opacity-80 hover:opacity-100 hover:scale-[1.01]';
+        ? 'opacity-100 scale-[1.02] ring-2 ring-offset-2 ring-offset-background ring-primary shadow-xl'
+        : 'opacity-90 hover:opacity-100 hover:scale-[1.01] hover:shadow-lg';
 
     return (
         <div
             onClick={onClick}
             style={gradientStyle}
-            className={`rounded-xl p-5 text-white shadow-lg transition-all duration-300 cursor-pointer select-none border border-white/10 relative overflow-hidden ${onClick ? opacityClass : ''}`}
+            className={`rounded-xl p-6 text-white transition-all duration-300 cursor-pointer select-none border border-white/10 relative overflow-hidden ${onClick ? opacityClass : ''}`}
         >
             <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-lg">{card.bank.name} • {card.lastDigits}</h3>
-                    {isSelected && <div className="w-2 h-2 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <div className="w-8 h-5 bg-white/20 rounded-md backdrop-blur-sm border border-white/10"></div>
+                        <Typography variant="body-base" weight="semibold" className="text-white">
+                            {card.bank.name}
+                        </Typography>
+                    </div>
+                    <Typography variant="body-sm" className="font-mono opacity-80">
+                        •••• {card.lastDigits}
+                    </Typography>
                 </div>
 
-                <p className="text-xs uppercase tracking-wider opacity-70 mb-1 font-medium">Limite Total</p>
-                <p className="text-2xl font-bold mb-3 tracking-tight">R$ {card.limit.toLocaleString('pt-BR')}</p>
+                <div className="space-y-1 mb-4">
+                    <Typography variant="body-xs" className="uppercase tracking-wider opacity-70 font-medium">
+                        Limite Total
+                    </Typography>
+                    <Typography variant="h3" weight="bold" className="tracking-tight">
+                        R$ {card.limit.toLocaleString('pt-BR')}
+                    </Typography>
+                </div>
 
                 <div className="flex justify-between items-end">
-                    <p className="text-sm opacity-80 font-medium">Disponível: R$ {card.available.toLocaleString('pt-BR')}</p>
+                    <Typography variant="body-sm" className="opacity-90 font-medium">
+                        Disponível: R$ {card.available.toLocaleString('pt-BR')}
+                    </Typography>
                 </div>
 
                 {showProgressBar && card.percent !== undefined && (
-                    <div className="mt-4">
-                        <div className="w-full bg-black/20 rounded-full h-2">
+                    <div className="mt-5">
+                        <div className="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
                             <div
                                 className="bg-white h-full rounded-full transition-all duration-1000"
                                 style={{ width: `${card.percent}%` }}
                             ></div>
                         </div>
                         {(card.closing || card.due) && (
-                            <div className="flex justify-between pt-2 mt-2 border-t border-white/20 text-xs text-white/90">
+                            <div className="flex justify-between pt-3 mt-2 border-t border-white/10 text-xs text-white/90">
                                 {card.closing && <div><span className="opacity-70">Fecha:</span> <strong>Dia {card.closing}</strong></div>}
                                 {card.due && <div><span className="opacity-70">Vence:</span> <strong>Dia {card.due}</strong></div>}
                             </div>
@@ -88,7 +104,10 @@ export const CreditCard = ({ card, isSelected = false, onClick, showProgressBar 
                     </div>
                 )}
             </div>
-            <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+
+            {/* Visual decorations */}
+            <div className="absolute -right-12 -bottom-12 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -left-12 -top-12 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
         </div>
     );
 };

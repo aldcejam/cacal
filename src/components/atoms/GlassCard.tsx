@@ -1,7 +1,22 @@
 import React from 'react';
 
-export const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-    <div className={`bg-card/50 backdrop-blur-md border border-border/50 rounded-2xl p-6 shadow-xl ${className}`}>
-        {children}
-    </div>
-);
+interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
+    children: React.ReactNode;
+    className?: string;
+    hoverEffect?: boolean;
+}
+
+export const GlassCard = ({ children, className = "", hoverEffect = false, ...props }: GlassCardProps) => {
+    const hoverClasses = hoverEffect
+        ? "transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:border-primary/30"
+        : "";
+
+    return (
+        <div
+            className={`bg-card/60 backdrop-blur-xl border border-border/60 rounded-2xl p-6 shadow-sm ${hoverClasses} ${className}`}
+            {...props}
+        >
+            {children}
+        </div>
+    );
+};
