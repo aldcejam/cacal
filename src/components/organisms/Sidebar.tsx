@@ -33,7 +33,7 @@ export const Sidebar = ({
     const currentUser = getUsuarioAtual();
 
     const menuItems = [
-        ...(currentUser.isPrincipal ? [{ name: 'Visão Geral', icon: <Icons.Home />, page: 'visao-geral' as Page }] : []),
+        { name: 'Visão Geral', icon: <Icons.Home />, page: 'visao-geral' as Page },
         { name: 'Entradas', icon: <Icons.Wallet />, page: 'entradas' as Page },
         { name: 'Meus Cartões', icon: <Icons.CreditCard />, page: 'cartoes' as Page },
         { name: 'Gastos Recorrentes', icon: <Icons.Repeat />, page: 'gastos-recorrentes' as Page },

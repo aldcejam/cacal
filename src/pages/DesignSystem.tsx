@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Button } from '../components/atoms/Button';
 import { Badge } from '../components/atoms/Badge';
 import { GlassCard } from '../components/atoms/GlassCard';

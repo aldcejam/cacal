@@ -1,9 +1,10 @@
 import React from 'react';
 import { Badge } from '../atoms/Badge';
+import { type Card } from '../../mocks/cartao';
 
 interface Transaction {
     id: string;
-    cardId: string;
+    card: Card;
     description: string;
     category: string;
     value: number;
@@ -15,7 +16,7 @@ interface Transaction {
 
 interface TransactionTableProps {
     transactions: Transaction[];
-    cards: any[]; // Using any[] for simplicity or import Card type
+    cards?: Card[]; // Kept for compatibility but not strictly needed for lookup anymore
     selectedIds?: string[];
     title?: string;
     onSort?: (key: any) => void;
@@ -25,7 +26,7 @@ interface TransactionTableProps {
 
 export const TransactionTable = ({
     transactions,
-    cards,
+    // cards, // Unused but kept for props compatibility if parents pass it -> actually removing to fix lint
     selectedIds = [],
     title = "Despesas",
     onSort,
@@ -111,7 +112,7 @@ export const TransactionTable = ({
                             </thead>
                             <tbody className="[&_tr:last-child]:border-0">
                                 {transactions.map((t) => {
-                                    const card = cards.find(c => c.id === t.cardId);
+                                    const card = t.card;
                                     return (
                                         <tr key={t.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                                             <td className="p-4 align-middle font-medium text-foreground">

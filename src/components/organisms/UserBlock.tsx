@@ -1,9 +1,5 @@
-import React from 'react';
-// @ts-ignore
 import { type Card } from '../../mocks/cartao';
-// @ts-ignore
 import { type GastoRecorrente } from '../../mocks/gastoRecorrente';
-// @ts-ignore
 import { type Usuario } from '../../mocks/usuario';
 import { CreditCard } from '../molecules/CreditCard';
 import { RecurringExpensesCard } from '../molecules/RecurringExpensesCard';
@@ -17,7 +13,15 @@ interface UserBlockProps {
     onToggleCard: (cardId: string) => void;
 }
 
-
+// Helper to generate color from string
+const stringToColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
+};
 
 export const UserBlock: React.FC<UserBlockProps> = ({
     user,
@@ -27,6 +31,7 @@ export const UserBlock: React.FC<UserBlockProps> = ({
     onToggleCard
 }) => {
     const totalGastos = gastosRecorrentes.reduce((acc, g) => acc + g.valor, 0);
+    const userColor = stringToColor(user.name);
 
     return (
         <div className="min-w-[90vw] md:min-w-[600px] lg:min-w-[700px] bg-card rounded-xl border border-border/50 p-6 shadow-sm">
@@ -34,7 +39,7 @@ export const UserBlock: React.FC<UserBlockProps> = ({
             <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/50">
                 <div
                     className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
-                    style={{ backgroundColor: user.color }}
+                    style={{ backgroundColor: userColor }}
                 >
                     {user.name.charAt(0).toUpperCase()}
                 </div>

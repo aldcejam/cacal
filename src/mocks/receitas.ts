@@ -1,6 +1,8 @@
+import { usuarios, type Usuario } from "./usuario";
+
 export interface Receita {
     id: string;
-    userId: string;
+    user: Usuario;
     descricao: string;
     categoria: 'Salário' | 'Benefício' | 'Investimento' | 'Extra' | 'Outros';
     valor: number;
@@ -10,7 +12,7 @@ export interface Receita {
 export const receitasData: Receita[] = [
     {
         id: 'r1',
-        userId: 'u1', // João Silva
+        user: usuarios[0], // João Silva
         descricao: 'Salário Mensal',
         categoria: 'Salário',
         valor: 8500.00,
@@ -18,7 +20,7 @@ export const receitasData: Receita[] = [
     },
     {
         id: 'r2',
-        userId: 'u1',
+        user: usuarios[0],
         descricao: 'Vale Refeição',
         categoria: 'Benefício',
         valor: 900.00,
@@ -26,7 +28,7 @@ export const receitasData: Receita[] = [
     },
     {
         id: 'r3',
-        userId: 'u1',
+        user: usuarios[0],
         descricao: 'Rendimentos NuBank',
         categoria: 'Investimento',
         valor: 150.45,
@@ -34,7 +36,7 @@ export const receitasData: Receita[] = [
     },
     {
         id: 'r4',
-        userId: 'u2', // Maria Santos
+        user: usuarios[1], // Maria Santos
         descricao: 'Salário',
         categoria: 'Salário',
         valor: 6200.00,
@@ -42,7 +44,7 @@ export const receitasData: Receita[] = [
     },
     {
         id: 'r5',
-        userId: 'u2',
+        user: usuarios[1],
         descricao: 'Auxílio Home Office',
         categoria: 'Benefício',
         valor: 200.00,
@@ -50,7 +52,7 @@ export const receitasData: Receita[] = [
     },
     {
         id: 'r6',
-        userId: 'u2',
+        user: usuarios[1],
         descricao: 'Venda de Bolos',
         categoria: 'Extra',
         valor: 450.00,
@@ -58,7 +60,7 @@ export const receitasData: Receita[] = [
     },
     {
         id: 'r7',
-        userId: 'u3', // Pedro Costa
+        user: usuarios[2], // Pedro Costa
         descricao: 'Bolsa Estágio',
         categoria: 'Salário',
         valor: 1200.00,
@@ -66,7 +68,7 @@ export const receitasData: Receita[] = [
     },
     {
         id: 'r8',
-        userId: 'u3',
+        user: usuarios[2],
         descricao: 'Vale Transporte',
         categoria: 'Benefício',
         valor: 180.00,

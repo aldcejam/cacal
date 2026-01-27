@@ -7,14 +7,20 @@ import { TransactionTable } from './TransactionTable';
 import { Typography } from '../atoms/Typography';
 import { Button } from '../atoms/Button';
 
-// @ts-ignore
 import { usuarios } from '../../mocks/usuario';
-// @ts-ignore
 import { creditCards } from '../../mocks/cartao';
-// @ts-ignore
 import { gastosRecorrentesData } from '../../mocks/gastoRecorrente';
-// @ts-ignore
 import { transactionsData } from '../../mocks/transacao';
+
+// Helper for color generation
+const stringToColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
+};
 
 interface DetailedExpensesModalProps {
     isOpen: boolean;
@@ -50,7 +56,7 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
     }, [selectedUserIds]);
 
     const filteredRecurringExpenses = useMemo(() => {
-        return gastosRecorrentesData.filter((g: any) => selectedUserIds.includes(g.userId));
+        return gastosRecorrentesData.filter((g: any) => selectedUserIds.includes(g.user.id));
     }, [selectedUserIds]);
 
     // Cards Selection Logic for Table
@@ -62,7 +68,7 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
 
         // Init with all visible recurring GROUPS
         // We need to know which USERS have recurring expenses in the filtered list
-        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g: any) => g.userId)));
+        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g: any) => g.user.id)));
         const recurringGroupIds = usersWithRecurring.map((userId: any) => `recurring-group-${userId}`);
 
         setSelectedCardIds([...cardIds, ...recurringGroupIds]);
@@ -79,7 +85,7 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
     // Derived Selection State (for buttons)
     const allCardIds = useMemo(() => filteredCreditCards.map((c: any) => c.id), [filteredCreditCards]);
     const allRecurringGroupIds = useMemo(() => {
-        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g: any) => g.userId)));
+        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g: any) => g.user.id)));
         return usersWithRecurring.map((userId: any) => `recurring-group-${userId}`);
     }, [filteredRecurringExpenses]);
 
@@ -130,7 +136,7 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
         // 1. Credit Card Transactions
         // Filter by actually selected card IDs
         const activeCardIds = filteredCreditCards.map((c: any) => c.id).filter((id: string) => selectedCardIds.includes(id));
-        const relevantTransactions = transactionsData.filter((t: any) => activeCardIds.includes(t.cardId));
+        const relevantTransactions = transactionsData.filter((t: any) => activeCardIds.includes(t.card.id));
         combined.push(...relevantTransactions);
 
         // 2. Recurring Transactions
@@ -138,11 +144,11 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
         const activeRecurringGroupIds = selectedCardIds.filter(id => id.startsWith('recurring-group-'));
         const activeUserIds = activeRecurringGroupIds.map(id => id.replace('recurring-group-', ''));
 
-        const activeRecurring = filteredRecurringExpenses.filter((g: any) => activeUserIds.includes(g.userId));
+        const activeRecurring = filteredRecurringExpenses.filter((g: any) => activeUserIds.includes(g.user.id));
 
         const recurringAsTransactions = activeRecurring.map((g: any) => ({
             id: `rec-${g.id}`,
-            cardId: `recurring-group-${g.userId}`, // Use the selection ID as cardId to match logic if needed
+            card: { bank: { name: 'Recorrente', color: '#10b981' }, id: 'recurring' }, // Mock object for compat
             description: g.descricao,
             category: g.categoria,
             value: g.valor,
@@ -163,12 +169,12 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
         const groups: { [key: string]: { userId: string, total: number, count: number, user: any } } = {};
 
         filteredRecurringExpenses.forEach((g: any) => {
-            if (!groups[g.userId]) {
-                const user = usuarios.find((u: any) => u.id === g.userId);
-                groups[g.userId] = { userId: g.userId, total: 0, count: 0, user };
+            if (!groups[g.user.id]) {
+                const user = g.user;
+                groups[g.user.id] = { userId: g.user.id, total: 0, count: 0, user };
             }
-            groups[g.userId].total += g.valor;
-            groups[g.userId].count += 1;
+            groups[g.user.id].total += g.valor;
+            groups[g.user.id].count += 1;
         });
 
         return Object.values(groups);
@@ -187,6 +193,7 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
                 <div className="flex justify-center gap-4 py-2 overflow-x-auto">
                     {usuarios.map((user: any) => {
                         const isSelected = selectedUserIds.includes(user.id);
+                        const userColor = stringToColor(user.name);
                         return (
                             <div
                                 key={user.id}
@@ -202,7 +209,7 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
                                         shadow-lg ring-2 ring-offset-2 ring-offset-card
                                         ${isSelected ? 'ring-primary' : 'ring-transparent'}
                                     `}
-                                    style={{ backgroundColor: user.color }}
+                                    style={{ backgroundColor: userColor }}
                                 >
                                     {user.name.charAt(0).toUpperCase()}
                                 </div>
@@ -293,7 +300,6 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
                 <div className="pt-4 border-t border-border/50">
                     <TransactionTable
                         transactions={tableTransactions}
-                        cards={creditCards}
                         title="Detalhamento das Seleções"
                         emptyMessage="Nenhum item selecionado."
                     />

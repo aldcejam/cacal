@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 // @ts-ignore
 import { transactionsData } from '../mocks/transacao';
 // @ts-ignore
@@ -17,9 +17,7 @@ interface SortConfig {
 
 export default function CardsPage() {
     const currentUser = getUsuarioAtual();
-    const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
-        currentUser.isPrincipal ? [currentUser.id] : [currentUser.id]
-    );
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([currentUser.id]);
     const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 
@@ -88,11 +86,11 @@ export default function CardsPage() {
 
         // Primeiro filtrar por cartões dos usuários selecionados
         const userCardIds = availableCards.map(c => c.id);
-        data = data.filter(t => userCardIds.includes(t.cardId));
+        data = data.filter(t => userCardIds.includes(t.card.id));
 
         // Depois filtrar por cartões selecionados
         if (selectedCardIds.length > 0) {
-            data = data.filter(t => selectedCardIds.includes(t.cardId));
+            data = data.filter(t => selectedCardIds.includes(t.card.id));
         } else {
             return [];
         }

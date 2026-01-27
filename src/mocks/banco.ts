@@ -1,4 +1,4 @@
-export interface BankInterface {
+export interface Bank {
     id: number;
     name: string;
     color: string;
@@ -7,7 +7,7 @@ export interface BankInterface {
     closingDate: string;
 }
 
-export const banks: BankInterface[] = [
+export const banks: Bank[] = [
     {
         id: 1,
         name: 'Nubank',

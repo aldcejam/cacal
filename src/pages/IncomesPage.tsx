@@ -1,8 +1,6 @@
 import React, { useState, useMemo } from 'react';
-// @ts-ignore
 import { receitasData, type Receita } from '../mocks/receitas';
-// @ts-ignore
-import { getUsuarioAtual, usuarios } from '../mocks/usuario';
+import { getUsuarioAtual } from '../mocks/usuario';
 
 import { UserSelector } from '../components/organisms/UserSelector';
 import { Button } from '../components/atoms/Button';
@@ -17,6 +15,16 @@ const getCategoryColor = (cat: string) => {
         case 'Extra': return 'amber';
         default: return 'default';
     }
+};
+
+// Helper for color generation
+const stringToColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
 };
 
 const Header = () => (
@@ -78,13 +86,14 @@ const IncomesTable = ({
                             </thead>
                             <tbody className="[&_tr:last-child]:border-0">
                                 {receitas.map((receita) => {
-                                    const user = usuarios.find(u => u.id === receita.userId);
+                                    const user = receita.user;
+                                    const userColor = stringToColor(user.name);
                                     return (
                                         <tr key={receita.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                                             {showUserColumn && user && (
                                                 <td className="p-4 align-middle">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: user.color }}>
+                                                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: userColor }}>
                                                             {user.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <span className="text-foreground font-medium text-sm">{user.name}</span>
@@ -93,8 +102,7 @@ const IncomesTable = ({
                                             )}
                                             <td className="p-4 align-middle text-foreground font-medium">{receita.descricao}</td>
                                             <td className="p-4 align-middle">
-                                                {/* @ts-ignore */}
-                                                <Badge variant={getCategoryColor(receita.categoria)}>{receita.categoria}</Badge>
+                                                <Badge variant={getCategoryColor(receita.categoria) as any}>{receita.categoria}</Badge>
                                             </td>
                                             <td className="p-4 align-middle text-muted-foreground">
                                                 Dia {receita.diaRecebimento}
@@ -132,7 +140,7 @@ const IncomesTable = ({
 export default function IncomesPage() {
     const currentUser = getUsuarioAtual();
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
-        currentUser.isPrincipal ? [currentUser.id] : [currentUser.id]
+        [currentUser.id]
     );
 
     const handleToggleUser = (userId: string) => {
@@ -145,7 +153,7 @@ export default function IncomesPage() {
     };
 
     const filteredReceitas = useMemo(() => {
-        return receitasData.filter(r => selectedUserIds.includes(r.userId));
+        return receitasData.filter(r => selectedUserIds.includes(r.user.id));
     }, [selectedUserIds]);
 
     const totalIncome = filteredReceitas.reduce((acc, r) => acc + r.valor, 0);
@@ -173,7 +181,7 @@ export default function IncomesPage() {
 
                 <IncomesTable
                     receitas={filteredReceitas}
-                    showUserColumn={currentUser.isPrincipal && selectedUserIds.length > 1}
+                    showUserColumn={selectedUserIds.length > 1}
                 />
             </div>
         </div>

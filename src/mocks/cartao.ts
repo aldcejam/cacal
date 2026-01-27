@@ -1,4 +1,5 @@
-import { banks, type BankInterface } from "./banco";
+import { banks, type Bank } from "./banco";
+import { usuarios, type Usuario } from "./usuario";
 
 export interface Card {
     id: string;
@@ -7,11 +8,8 @@ export interface Card {
     available: number;
     dueDate?: string;
     closingDate?: string;
-    user: {
-        id: string;
-        name: string;
-    };
-    bank: BankInterface;
+    user: Usuario;
+    bank: Bank;
 }
 
 export const creditCards: Card[] = [
@@ -22,10 +20,7 @@ export const creditCards: Card[] = [
         available: 2660,
         dueDate: '2023-10-10',
         closingDate: '2023-10-05',
-        user: {
-            id: 'u1',
-            name: 'User 1'
-        },
+        user: usuarios[0],
         bank: banks[0]
     },
     {
@@ -35,10 +30,7 @@ export const creditCards: Card[] = [
         available: 3440,
         dueDate: '2023-10-15',
         closingDate: '2023-10-10',
-        user: {
-            id: 'u2',
-            name: 'User 2'
-        },
+        user: usuarios[1],
         bank: banks[1]
     },
     {
@@ -48,10 +40,7 @@ export const creditCards: Card[] = [
         available: 2220,
         dueDate: '2023-10-20',
         closingDate: '2023-10-15',
-        user: {
-            id: 'u3',
-            name: 'User 3'
-        },
+        user: usuarios[2],
         bank: banks[2]
     }
 ];

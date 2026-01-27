@@ -1,24 +1,19 @@
 import React, { useState } from 'react';
 
-import { getUsuarioAtual } from '../mocks/usuario';
 import { useFinancialSummary } from '../hooks/useFinancialSummary';
 
 import { FinancialOverview } from '../components/organisms/FinancialOverview';
 import { DetailedExpensesModal } from '../components/organisms/DetailedExpensesModal';
 import { ResumoCards } from '../components/organisms/ResumoCards';
-import { AccessDeniedState } from '../components/molecules/AccessDeniedState';
 import { PageHeader } from '../components/molecules/PageHeader';
 
 export default function OverviewPage() {
-    const currentUser = getUsuarioAtual();
     const { totalGastos, totalCartoes, totalLimite, totalDisponivel } = useFinancialSummary();
 
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    if (!currentUser.isPrincipal) {
-        return <AccessDeniedState />;
-    }
+
 
     return (
         <div className="flex-1 p-6 md:p-8 overflow-y-auto w-full">

@@ -1,6 +1,8 @@
+import { usuarios, type Usuario } from "./usuario";
+
 export interface GastoRecorrente {
   id: string;
-  userId: string; // ID do usuário dono do gasto
+  user: Usuario; // Usuario dono do gasto
   pagamento: string; // Forma de pagamento
   descricao: string;
   categoria: string;
@@ -10,7 +12,7 @@ export interface GastoRecorrente {
 export const gastosRecorrentesData: GastoRecorrente[] = [
   {
     id: 'gr1',
-    userId: 'u1',
+    user: usuarios[0],
     pagamento: 'Cartão de Crédito',
     descricao: 'Netflix',
     categoria: 'Streaming',
@@ -18,7 +20,7 @@ export const gastosRecorrentesData: GastoRecorrente[] = [
   },
   {
     id: 'gr2',
-    userId: 'u1',
+    user: usuarios[0],
     pagamento: 'Débito Automático',
     descricao: 'Academia SmartFit',
     categoria: 'Saúde',
@@ -26,7 +28,7 @@ export const gastosRecorrentesData: GastoRecorrente[] = [
   },
   {
     id: 'gr3',
-    userId: 'u2',
+    user: usuarios[1],
     pagamento: 'PIX',
     descricao: 'Spotify Premium',
     categoria: 'Streaming',
@@ -34,7 +36,7 @@ export const gastosRecorrentesData: GastoRecorrente[] = [
   },
   {
     id: 'gr4',
-    userId: 'u2',
+    user: usuarios[1],
     pagamento: 'Cartão de Crédito',
     descricao: 'Amazon Prime',
     categoria: 'Streaming',
@@ -42,7 +44,7 @@ export const gastosRecorrentesData: GastoRecorrente[] = [
   },
   {
     id: 'gr5',
-    userId: 'u3',
+    user: usuarios[2],
     pagamento: 'Débito Automático',
     descricao: 'Plano de Celular',
     categoria: 'Telecomunicações',
@@ -50,7 +52,7 @@ export const gastosRecorrentesData: GastoRecorrente[] = [
   },
   {
     id: 'gr6',
-    userId: 'u4',
+    user: usuarios[3],
     pagamento: 'PIX',
     descricao: 'Curso Online',
     categoria: 'Educação',

@@ -1,7 +1,7 @@
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
- 
+
 import OverviewPage from './pages/OverviewPage';
 import CardsPage from './pages/CardsPage';
 import RecurringExpensesPage from './pages/RecurringExpensesPage';
@@ -9,16 +9,12 @@ import IncomesPage from './pages/IncomesPage';
 import DesignSystemPage from './pages/DesignSystem';
 
 import { MainLayout } from './components/templates/MainLayout'
-import { getUsuarioAtual } from './mocks/usuario'
 import type { Page } from './types';
 
 
 
 const AppRoot = () => {
-  const currentUser = getUsuarioAtual();
-  const [currentPage, setCurrentPage] = useState<Page>(
-    currentUser.isPrincipal ? 'visao-geral' : 'cartoes'
-  );
+  const [currentPage, setCurrentPage] = useState<Page>('visao-geral');
 
   // Assuming menuItems is defined here or passed as a prop to MainLayout
   // The provided snippet suggests it might be defined within AppRoot
