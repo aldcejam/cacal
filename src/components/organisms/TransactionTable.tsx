@@ -131,7 +131,7 @@ export const TransactionTable = ({
                                             </td>
                                             <td className="p-4 align-middle text-foreground font-medium">{t.description}</td>
                                             <td className="p-4 align-middle">
-                                                <Badge color={getCategoryColor(t.category)}>
+                                                <Badge variant={getCategoryColor(t.category) as any}>
                                                     {t.category}
                                                 </Badge>
                                             </td>
