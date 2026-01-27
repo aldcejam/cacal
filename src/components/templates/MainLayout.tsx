@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../organisms/Sidebar';
+import type { Page } from '../../types';
 
-// Reusing the Page type from Sidebar or defining it in a types file would be better
-// For now, repeating it here to avoid complex changes
-type Page = 'visao-geral' | 'cartoes' | 'gastos-recorrentes' | 'dashboard' | 'relatorios' | 'configuracoes';
+
 
 interface MainLayoutProps {
     children: React.ReactNode;

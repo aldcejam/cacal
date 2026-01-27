@@ -6,12 +6,14 @@ import DashboardPage from './pages/DashboardPage'
 import OverviewPage from './pages/OverviewPage';
 import CardsPage from './pages/CardsPage';
 import RecurringExpensesPage from './pages/RecurringExpensesPage';
+import IncomesPage from './pages/IncomesPage';
 import DesignSystemPage from './pages/DesignSystem';
 
 import { MainLayout } from './components/templates/MainLayout'
 import { getUsuarioAtual } from './mocks/usuario'
+import type { Page } from './types';
 
-type Page = 'visao-geral' | 'cartoes' | 'gastos-recorrentes' | 'dashboard' | 'relatorios' | 'configuracoes' | 'design-system';
+
 
 const AppRoot = () => {
   const currentUser = getUsuarioAtual();
@@ -35,6 +37,8 @@ const AppRoot = () => {
     switch (currentPage) {
       case 'visao-geral':
         return <OverviewPage />;
+      case 'entradas':
+        return <IncomesPage />;
       case 'cartoes':
         return <CardsPage />;
       case 'gastos-recorrentes':
