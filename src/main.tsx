@@ -1,8 +1,7 @@
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-
-import DashboardPage from './pages/DashboardPage'
+ 
 import OverviewPage from './pages/OverviewPage';
 import CardsPage from './pages/CardsPage';
 import RecurringExpensesPage from './pages/RecurringExpensesPage';
@@ -45,11 +44,6 @@ const AppRoot = () => {
         return <RecurringExpensesPage />;
       case 'design-system':
         return <DesignSystemPage />;
-      case 'dashboard':
-        return <DashboardPage />;
-      // Mapping Relatorios to DashboardPage just so it's visible, assuming home.tsx was intended for that
-      case 'relatorios':
-        return <DashboardPage />;
       case 'configuracoes':
         return (
           <div className="flex-1 p-6 md:p-8 overflow-y-auto w-full flex items-center justify-center">
