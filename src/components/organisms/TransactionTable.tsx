@@ -10,6 +10,7 @@ interface Transaction {
     parcels: string;
     total: number;
     status?: string; // Optional for compatibility
+    paymentMethod?: string; // Add optional payment method
 }
 
 interface TransactionTableProps {
@@ -83,7 +84,7 @@ export const TransactionTable = ({
                         <table className="w-full caption-bottom text-sm">
                             <thead className="[&_tr]:border-b">
                                 <tr className="border-b border-border/50 transition-colors hover:bg-transparent bg-secondary/20">
-                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Cartão</th>
+                                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Origem</th>
                                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Descrição</th>
                                     <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Categoria</th>
 
@@ -115,8 +116,17 @@ export const TransactionTable = ({
                                         <tr key={t.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                                             <td className="p-4 align-middle font-medium text-foreground">
                                                 <div className="flex items-center gap-2">
-                                                    {card && <span className="w-2 h-2 rounded-full" style={{ backgroundColor: card.bank.color }}></span>}
-                                                    {card ? card.bank.name : 'Unknown'}
+                                                    {card ? (
+                                                        <>
+                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: card.bank.color }}></span>
+                                                            {card.bank.name}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                                                            <span className="text-muted-foreground">{t.paymentMethod || 'Outro'}</span>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="p-4 align-middle text-foreground font-medium">{t.description}</td>

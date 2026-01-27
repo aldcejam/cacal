@@ -6,6 +6,7 @@ import { type GastoRecorrente } from '../../mocks/gastoRecorrente';
 // @ts-ignore
 import { type Usuario } from '../../mocks/usuario';
 import { CreditCard } from '../molecules/CreditCard';
+import { RecurringExpensesCard } from '../molecules/RecurringExpensesCard';
 // We are reusing CreditCard molecule here instead of the inline card
 
 interface UserBlockProps {
@@ -16,18 +17,7 @@ interface UserBlockProps {
     onToggleCard: (cardId: string) => void;
 }
 
-const getCategoryStyle = (category: string) => {
-    switch (category) {
-        case 'Streaming': return 'bg-violet-500/20 text-violet-300 border-violet-500/30';
-        case 'Alimentação': return 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-        case 'Eletrônicos': return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-        case 'Transporte': return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-        case 'Saúde': return 'bg-rose-500/20 text-rose-300 border-rose-500/30';
-        case 'Telecomunicações': return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
-        case 'Educação': return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
-        default: return 'bg-secondary text-secondary-foreground border-border';
-    }
-};
+
 
 export const UserBlock: React.FC<UserBlockProps> = ({
     user,
@@ -98,36 +88,13 @@ export const UserBlock: React.FC<UserBlockProps> = ({
                         <p className="text-sm text-muted-foreground">Nenhum gasto recorrente cadastrado</p>
                     </div>
                 ) : (
-                    <div className="space-y-2">
-                        {gastosRecorrentes.map((gasto) => (
-                            <div
-                                key={gasto.id}
-                                className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg border border-border/50 hover:bg-secondary/50 transition-colors"
-                            >
-                                <div className="flex-1">
-                                    <p className="font-medium text-foreground text-sm">{gasto.descricao}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <div className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border bg-blue-500/20 text-blue-300 border-blue-500/30`}>
-                                            {gasto.pagamento}
-                                        </div>
-                                        <div className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold border ${getCategoryStyle(gasto.categoria)}`}>
-                                            {gasto.categoria}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-bold text-foreground">R$ {gasto.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
-                                </div>
-                            </div>
-                        ))}
-                        {gastosRecorrentes.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-border/50 flex items-center justify-between">
-                                <span className="text-sm font-semibold text-foreground">Total Mensal</span>
-                                <span className="text-base font-bold text-primary">
-                                    R$ {totalGastos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </span>
-                            </div>
-                        )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <RecurringExpensesCard
+                            totalValue={totalGastos}
+                            count={gastosRecorrentes.length}
+                            isSelected={selectedCardIds.includes(`recurring-${user.id}`)}
+                            onClick={() => onToggleCard(`recurring-${user.id}`)}
+                        />
                     </div>
                 )}
             </div>

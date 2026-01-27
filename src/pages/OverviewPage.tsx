@@ -6,12 +6,15 @@ import { gastosRecorrentesData } from '../mocks/gastoRecorrente';
 // @ts-ignore
 import { usuarios, getUsuarioAtual } from '../mocks/usuario';
 // @ts-ignore
+// @ts-ignore
 import { transactionsData } from '../mocks/transacao';
 
 import { Carousel } from '../components/molecules/Carousel';
 import { UserBlock } from '../components/organisms/UserBlock';
-import { TransactionTable } from '../components/organisms/TransactionTable';
 import { MetricCard } from '../components/molecules/MetricCard';
+import { FinancialOverview } from '../components/organisms/FinancialOverview';
+import { DetailedExpensesModal } from '../components/organisms/DetailedExpensesModal';
+import { ResumoCards } from '../components/organisms/ResumoCards';
 
 const Header = () => (
     <header className="flex items-center justify-between mb-8 pt-2 md:pt-0 pl-12 md:pl-0">
@@ -61,7 +64,8 @@ const ResumoCards = ({ totalGastos, totalCartoes, totalLimite, totalDisponivel }
 
 export default function OverviewPage() {
     const currentUser = getUsuarioAtual();
-    const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Se não for usuário principal, não mostra nada
     if (!currentUser.isPrincipal) {
@@ -104,10 +108,45 @@ export default function OverviewPage() {
         });
     };
 
-    // Filtrar transações para a tabela
+    // Unified filtered transactions
     const filteredTransactions = useMemo(() => {
         if (selectedCardIds.length === 0) return [];
-        return transactionsData.filter(t => selectedCardIds.includes(t.cardId));
+
+        const combinedTransactions: any[] = [];
+
+        // 1. Credit Card Transactions
+        // Filter transactions where cardId is in selectedIds
+        const cardTransactions = transactionsData.filter(t => selectedCardIds.includes(t.cardId));
+        combinedTransactions.push(...cardTransactions);
+
+        // 2. Recurring Expenses
+        // Identify selected recurring "cards" (ids starting with 'recurring-')
+        const recurringIds = selectedCardIds.filter(id => id.startsWith('recurring-'));
+
+        if (recurringIds.length > 0) {
+            const userIds = recurringIds.map(id => id.replace('recurring-', ''));
+            const recurringExpenses = gastosRecorrentesData.filter(g => userIds.includes(g.userId));
+
+            // Map recurring expenses to Transaction interface
+            const recurringAsTransactions = recurringExpenses.map(g => ({
+                id: `rec-${g.id}`,
+                cardId: `recurring-${g.userId}`, // Use the selection ID as cardId to match logic if needed, or specific mock ID
+                description: g.descricao,
+                category: g.categoria,
+                value: g.valor,
+                parcels: 'Recorrente', // Display 'Recorrente' in parcels column
+                total: g.valor, // Total is same as monthly value
+                status: 'approved',
+                isRecurring: true, // Flag for potential UI differentiation
+                paymentMethod: g.pagamento
+            }));
+
+            combinedTransactions.push(...recurringAsTransactions);
+        }
+
+        // Optional: Sort by value or date if available (recurring doesn't have date usually, maybe use creation date?)
+        // For now, just render them.
+        return combinedTransactions;
     }, [selectedCardIds]);
 
     return (
@@ -115,6 +154,8 @@ export default function OverviewPage() {
             <Header />
 
             <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+                <FinancialOverview />
+
                 <ResumoCards
                     totalGastos={totalGastos}
                     totalCartoes={totalCartoes}
@@ -149,13 +190,34 @@ export default function OverviewPage() {
                 </section>
 
                 {/* Tabela de Gastos (reage à seleção de cartões) */}
-                <TransactionTable
-                    transactions={filteredTransactions}
-                    cards={creditCards}
-                    selectedIds={selectedCardIds}
-                    title="Gastos dos Cartões Selecionados"
-                    emptyMessage="Selecione cartões nos blocos acima para visualizar os gastos."
-                />
+                {/* Floating Action Button for Details */}
+                <div className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-40 transition-all duration-300 ${selectedCardIds.length > 0 ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'}`}>
+                    <Button
+                        variant="primary"
+                        className="shadow-xl px-8 py-6 rounded-full text-base"
+                        onClick={() => setIsDetailsModalOpen(true)}
+                    >
+                        <div className="flex items-center gap-2">
+                            <span>Ver Detalhes ({selectedCardIds.length})</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path d="M12 4c4.418 0 8 3.582 8 8s-3.582 8-8 8-8-3.582-8-8 3.582-8 8-8Z" /></svg>
+                        </div>
+                    </Button>
+                </div>
+
+                {/* Details Modal */}
+                <Modal
+                    isOpen={isDetailsModalOpen}
+                    onClose={() => setIsDetailsModalOpen(false)}
+                    title="Detalhamento de Gastos"
+                >
+                    <TransactionTable
+                        transactions={filteredTransactions}
+                        cards={creditCards}
+                        selectedIds={selectedCardIds}
+                        title="Transações Selecionadas"
+                        emptyMessage="Nenhuma transação encontrada para a seleção."
+                    />
+                </Modal>
             </div>
         </div>
     );
