@@ -7,6 +7,11 @@ import { Input } from '../components/atoms/Input';
 import { MetricCard } from '../components/molecules/MetricCard';
 import { CreditCard } from '../components/molecules/CreditCard';
 
+import { Select } from '../components/atoms/Select';
+import { Textarea } from '../components/atoms/Textarea';
+import { Checkbox } from '../components/atoms/Checkbox';
+import { Switch } from '../components/atoms/Switch';
+
 // Using mock data for preview
 const mockCard = {
     id: "1",
@@ -19,8 +24,15 @@ const mockCard = {
     percent: 53.2
 };
 
+const selectOptions = [
+    { value: 'option1', label: 'Option 1' },
+    { value: 'option2', label: 'Option 2' },
+    { value: 'option3', label: 'Option 3' },
+];
+
 export default function DesignSystemPage() {
     const [toggle, setToggle] = useState(false);
+    const [switchVal, setSwitchVal] = useState(false);
 
     return (
         <div className="min-h-screen bg-background text-foreground p-8 space-y-12">
@@ -104,17 +116,43 @@ export default function DesignSystemPage() {
                 </div>
             </section>
 
-            {/* INPUTS */}
-            <section className="space-y-6 max-w-md">
+            {/* FORM ATOMS */}
+            <section className="space-y-6">
                 <div className="border-b border-border pb-2">
-                    <Typography variant="h2">Inputs</Typography>
+                    <Typography variant="h2">Form Atoms</Typography>
                 </div>
-                <div className="grid gap-4">
-                    <Input placeholder="Default Input" />
-                    <Input label="Email Address" placeholder="name@example.com" />
-                    <Input label="With Icon" leftIcon={<span>@</span>} placeholder="Username" />
-                    <Input label="Error State" error="Invalid email address" defaultValue="invalid-email" />
-                    <Input label="Disabled" disabled defaultValue="Cannot edit this" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Inputs */}
+                    <div className="space-y-4">
+                        <Typography variant="h3">Inputs</Typography>
+                        <Input placeholder="Default Input" />
+                        <Input label="Email Address" placeholder="name@example.com" />
+                        <Input label="With Left Icon" leftIcon={<span>@</span>} placeholder="Username" />
+                        <Input label="With Right Icon" rightIcon={<span>?</span>} placeholder="Search..." />
+                        <Input label="Error State" error="Invalid email address" defaultValue="invalid-email" />
+                        <Input label="Disabled" disabled defaultValue="Cannot edit this" />
+                    </div>
+
+                    {/* Select & Textarea */}
+                    <div className="space-y-4">
+                        <Typography variant="h3">Select & Textarea</Typography>
+                        <Select label="Simple Select" options={selectOptions} />
+                        <Select label="Select with Icon" leftIcon={<span>☰</span>} options={selectOptions} />
+                        <Textarea label="Bio" placeholder="Tell us about yourself" />
+                        <Textarea label="With Helper" placeholder="Type here..." helperText="Max 500 characters" />
+                    </div>
+
+                    {/* Toggles */}
+                    <div className="space-y-4">
+                        <Typography variant="h3">Toggles</Typography>
+                        <div className="flex flex-col gap-4">
+                            <Checkbox label="Accept terms and conditions" />
+                            <Checkbox label="Subscribe to newsletter" defaultChecked />
+                            <Switch label="Dark Mode" checked={switchVal} onChange={(e) => setSwitchVal(e.target.checked)} />
+                            <Switch label="Notifications" defaultChecked />
+                        </div>
+                    </div>
                 </div>
             </section>
 
