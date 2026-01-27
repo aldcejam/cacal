@@ -4,8 +4,8 @@ import { Carousel } from '../molecules/Carousel';
 import { CreditCard } from '../molecules/CreditCard';
 import { RecurringExpensesCard } from '../molecules/RecurringExpensesCard';
 import { TransactionTable } from './TransactionTable';
-import { Button } from '../atoms/Button';
 import { Typography } from '../atoms/Typography';
+import { Button } from '../atoms/Button';
 
 // @ts-ignore
 import { usuarios } from '../../mocks/usuario';
@@ -31,8 +31,7 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
         if (isOpen && initialUserId) {
             setSelectedUserIds([initialUserId]);
         } else if (isOpen && !initialUserId && selectedUserIds.length === 0) {
-            // Default to all users if none selected? Or none? 
-            // Let's default to the current user (mocked as first one) if nothing passed
+            // Default to all users if none selected
             setSelectedUserIds([usuarios[0].id]);
         }
     }, [isOpen, initialUserId]);
@@ -55,32 +54,18 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
     }, [selectedUserIds]);
 
     // Cards Selection Logic for Table
-    // "Default: all cards visible are selected"
     const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
 
     useEffect(() => {
-        // When filtered cards change (due to user selection), update selected cards
-        // to include ALL filtered cards + ALL recurring expenses
+        // Init with all visible credit cards
         const cardIds = filteredCreditCards.map((c: any) => c.id);
-        const recurringIds = filteredRecurringExpenses.map((g: any) => `recurring-${g.id}`); // Using mock ID logic
-        // Actually, recurring logic in OverviewPage used `recurring-${userId}`. 
-        // Let's align with that or improve it. 
-        // The recurring expense table logic aggregates by USER usually, or lists individual expenses?
-        // Let's use individual recurring expense IDs for selection to be precise combined with the table.
-        // Wait, TransactionTable usually expects 'cardId'. 
-        // In the previous step, we mapped recurring expenses to transactions.
-        // Let's maintain a derived list of transactions based on VISIBLE cards/recurring.
 
-        // For simplicity in this "Modal First" view:
-        // We auto-select EVERYTHING that is visible.
-        // So we don't strictly need `selectedCardIds` state if we just always show everything visible.
-        // BUT the user might want to toggle specific cards inside the carousel.
-        // So let's initialize with all visible.
+        // Init with all visible recurring GROUPS
+        // We need to know which USERS have recurring expenses in the filtered list
+        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g: any) => g.userId)));
+        const recurringGroupIds = usersWithRecurring.map((userId: any) => `recurring-group-${userId}`);
 
-        const allRecurringIds = filteredRecurringExpenses.map((g: any) => `rec-${g.id}`);
-        // NOTE: Unique IDs for recurring selection might need to match what TransactionTable expects.
-
-        setSelectedCardIds([...cardIds, ...allRecurringIds]);
+        setSelectedCardIds([...cardIds, ...recurringGroupIds]);
 
     }, [filteredCreditCards, filteredRecurringExpenses]);
 
@@ -89,6 +74,53 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
         setSelectedCardIds(prev =>
             prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
         );
+    };
+
+    // Derived Selection State (for buttons)
+    const allCardIds = useMemo(() => filteredCreditCards.map((c: any) => c.id), [filteredCreditCards]);
+    const allRecurringGroupIds = useMemo(() => {
+        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g: any) => g.userId)));
+        return usersWithRecurring.map((userId: any) => `recurring-group-${userId}`);
+    }, [filteredRecurringExpenses]);
+
+    const isAllCardsSelected = allCardIds.length > 0 && allCardIds.every(id => selectedCardIds.includes(id));
+    const isAllRecurringSelected = allRecurringGroupIds.length > 0 && allRecurringGroupIds.every(id => selectedCardIds.includes(id));
+    const isAllSelected = isAllCardsSelected && isAllRecurringSelected;
+
+    const handleSelectAllCards = () => {
+        if (isAllCardsSelected) {
+            // Deselect all cards
+            setSelectedCardIds(prev => prev.filter(id => !allCardIds.includes(id)));
+        } else {
+            // Select all cards
+            setSelectedCardIds(prev => {
+                const recurringIds = prev.filter(id => id.startsWith('recurring-group-'));
+                return [...Array.from(new Set([...recurringIds, ...allCardIds]))];
+            });
+        }
+    };
+
+    const handleSelectAllRecurring = () => {
+        if (isAllRecurringSelected) {
+            // Deselect all recurring
+            setSelectedCardIds(prev => prev.filter(id => !allRecurringGroupIds.includes(id)));
+        } else {
+            // Select all recurring
+            setSelectedCardIds(prev => {
+                const cardIds = prev.filter(id => !id.startsWith('recurring-group-'));
+                return [...Array.from(new Set([...cardIds, ...allRecurringGroupIds]))];
+            });
+        }
+    };
+
+    const handleSelectAll = () => {
+        if (isAllSelected) {
+            // Deselect everything
+            setSelectedCardIds([]);
+        } else {
+            // Select everything
+            setSelectedCardIds([...allCardIds, ...allRecurringGroupIds]);
+        }
     };
 
     // Prepare Unified Transactions
@@ -102,14 +134,15 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
         combined.push(...relevantTransactions);
 
         // 2. Recurring Transactions
-        // Identify which recurring expenses are "selected"
-        // In the carousel they will be individual items.
-        // We map them to transaction format.
-        const activeRecurring = filteredRecurringExpenses.filter((g: any) => selectedCardIds.includes(`rec-${g.id}`));
+        // Identify which recurring groups are "selected"
+        const activeRecurringGroupIds = selectedCardIds.filter(id => id.startsWith('recurring-group-'));
+        const activeUserIds = activeRecurringGroupIds.map(id => id.replace('recurring-group-', ''));
+
+        const activeRecurring = filteredRecurringExpenses.filter((g: any) => activeUserIds.includes(g.userId));
 
         const recurringAsTransactions = activeRecurring.map((g: any) => ({
             id: `rec-${g.id}`,
-            cardId: `rec_origin_${g.userId}`, // Dummy ID for "card" column if needed
+            cardId: `recurring-group-${g.userId}`, // Use the selection ID as cardId to match logic if needed
             description: g.descricao,
             category: g.categoria,
             value: g.valor,
@@ -124,6 +157,22 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
 
         return combined.sort((a, b) => b.value - a.value); // Sort by value desc
     }, [selectedCardIds, filteredCreditCards, filteredRecurringExpenses]);
+
+    // Group Recurring Expenses by User
+    const groupedRecurringExpenses = useMemo(() => {
+        const groups: { [key: string]: { userId: string, total: number, count: number, user: any } } = {};
+
+        filteredRecurringExpenses.forEach((g: any) => {
+            if (!groups[g.userId]) {
+                const user = usuarios.find((u: any) => u.id === g.userId);
+                groups[g.userId] = { userId: g.userId, total: 0, count: 0, user };
+            }
+            groups[g.userId].total += g.valor;
+            groups[g.userId].count += 1;
+        });
+
+        return Object.values(groups);
+    }, [filteredRecurringExpenses]);
 
 
     return (
@@ -163,6 +212,34 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
                     })}
                 </div>
 
+                {/* Bulk Actions */}
+                <div className="flex flex-wrap gap-2 justify-center border-b border-border/40 pb-4">
+                    <Button
+                        variant={isAllCardsSelected ? "primary" : "outline"}
+                        size="sm"
+                        onClick={handleSelectAllCards}
+                        leftIcon={<i className="ri-bank-card-line"></i>}
+                    >
+                        Todos os Cartões
+                    </Button>
+                    <Button
+                        variant={isAllRecurringSelected ? "primary" : "outline"}
+                        size="sm"
+                        onClick={handleSelectAllRecurring}
+                        leftIcon={<i className="ri-calendar-check-line"></i>}
+                    >
+                        Todos Recorrentes
+                    </Button>
+                    <Button
+                        variant={isAllSelected ? "primary" : "outline"}
+                        size="sm"
+                        onClick={handleSelectAll}
+                        leftIcon={<i className="ri-checkbox-multiple-line"></i>}
+                    >
+                        Selecionar Tudo
+                    </Button>
+                </div>
+
                 {/* 2. Carousels */}
                 <div className="space-y-6">
                     {/* Credit Cards */}
@@ -186,42 +263,24 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
                         </div>
                     )}
 
-                    {/* Recurring Expenses */}
-                    {filteredRecurringExpenses.length > 0 && (
+                    {/* Recurring Expenses (Grouped by User) */}
+                    {groupedRecurringExpenses.length > 0 && (
                         <div>
                             <Typography variant="body-sm" className="mb-3 text-muted-foreground uppercase tracking-wider font-semibold px-1">
-                                Custos Recorrentes ({filteredRecurringExpenses.length})
+                                Custos Recorrentes ({groupedRecurringExpenses.length} Usuários)
                             </Typography>
                             <Carousel>
-                                {filteredRecurringExpenses.map((expense: any) => (
-                                    <div key={expense.id} className="w-[280px] shrink-0 p-1">
+                                {groupedRecurringExpenses.map((group: any) => (
+                                    <div key={group.userId} className="w-[300px] shrink-0 p-1">
                                         <RecurringExpensesCard
-                                            totalValue={expense.valor}
-                                            count={1} // Single item per card in this view? Or maybe just title/value
-                                            // The existing RecurringExpensesCard was designed as a SUMMARY card.
-                                            // We might need a slightly different look or reuse it delicately.
-                                            // Let's reuse but render specific title.
-                                            // Actually, RecurringExpensesCard expects "totalValue" and "count". 
-                                            // It essentially looks like a Summary Card.
-                                            // Ideally we would want a "RecurringExpenseItemCard" but for now let's use what we have
-                                            // Or better, let's create a visual adaptation inline or modify the component later if needed.
-                                            // The prompt said "cards de custos".
-                                            // Let's pass the expense description as "count" prop text hack or similar?
-                                            // No, let's just use it as is for now, maybe title mapping is needed.
-                                            // Wait, the component is strict. 
-                                            // Let's stick to the prompt: "a mesma coisa para os gastos recorrentes".
-                                            // It implies a carousel of cards.
-                                            isSelected={selectedCardIds.includes(`rec-${expense.id}`)}
-                                            onClick={() => handleToggleCard(`rec-${expense.id}`)}
+                                            totalValue={group.total}
+                                            count={group.count}
+                                            isSelected={selectedCardIds.includes(`recurring-group-${group.userId}`)}
+                                            onClick={() => handleToggleCard(`recurring-group-${group.userId}`)}
                                         />
-                                        {/* Overlay to show specific expense name since component doesn't have it? 
-                                            RecurringExpensesCard is generic. 
-                                            We probably need a "RecurringExpenseItem" card similar to CreditCard. 
-                                            For this iteration, I will wrap it and add a label below or overlay.
-                                        */}
                                         <div className="mt-2 text-center">
-                                            <p className="font-medium text-sm text-foreground truncate">{expense.descricao}</p>
-                                            <p className="text-xs text-muted-foreground">{expense.categoria}</p>
+                                            <p className="font-medium text-sm text-foreground truncate">{group.user?.name}</p>
+                                            <p className="text-xs text-muted-foreground">Total recorrente</p>
                                         </div>
                                     </div>
                                 ))}

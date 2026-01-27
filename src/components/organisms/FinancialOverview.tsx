@@ -10,30 +10,7 @@ import { usuarios } from '../../mocks/usuario';
 // @ts-ignore
 import { creditCards } from '../../mocks/cartao';
 
-const StatCard = ({ title, value, variant = "default", type = "currency" }: { title: string, value: number, variant?: "default" | "success" | "danger" | "warning", type?: "currency" | "number" }) => {
-    let colorClass = "text-foreground";
-    let bgClass = "bg-card";
 
-    if (variant === "success") {
-        colorClass = "text-emerald-500";
-        bgClass = "bg-emerald-500/10 border-emerald-500/20";
-    } else if (variant === "danger") {
-        colorClass = "text-rose-500";
-        bgClass = "bg-rose-500/10 border-rose-500/20";
-    } else if (variant === "warning") {
-        colorClass = "text-amber-500";
-        bgClass = "bg-amber-500/10 border-amber-500/20";
-    }
-
-    return (
-        <div className={`p-4 rounded-xl border border-border/50 ${bgClass} flex flex-col justify-between`}>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</span>
-            <span className={`text-xl font-bold mt-1 ${colorClass}`}>
-                {type === 'currency' ? `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : value}
-            </span>
-        </div>
-    );
-};
 
 export const FinancialOverview = ({ onUserClick }: { onUserClick?: (userId: string) => void }) => {
     // 1. Calculate Family Totals
