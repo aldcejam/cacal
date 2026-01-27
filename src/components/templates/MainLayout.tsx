@@ -37,7 +37,7 @@ export const MainLayout = ({ children, currentPage, onNavigate }: MainLayoutProp
     };
 
     return (
-        <div className="flex min-h-screen bg-background font-sans text-foreground overflow-x-hidden">
+        <div className="flex min-h-screen bg-background font-sans text-foreground overflow-x-hidden relative">
 
             <Sidebar
                 isOpen={isSidebarOpen}
@@ -46,13 +46,17 @@ export const MainLayout = ({ children, currentPage, onNavigate }: MainLayoutProp
                 onNavigate={handleNavigate}
             />
 
-            <main className="flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out min-w-0 relative">
-
+            <main
+                className={`
+                    flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out min-w-0 relative
+                    ${isSidebarOpen ? 'md:ml-72' : 'md:ml-20'}
+                `}
+            >
                 {/* Botão Trigger Flutuante (Mobile) */}
-                <div className={`md:hidden absolute top-6 left-4 z-30 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <div className={`md:hidden fixed top-6 left-4 z-40 transition-opacity duration-300 ${isSidebarOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     <button
                         onClick={toggleSidebar}
-                        className="p-2 bg-card border border-border rounded-md shadow-sm text-foreground"
+                        className="p-2 bg-card/80 backdrop-blur-sm border border-border rounded-md shadow-sm text-foreground"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></svg>
                     </button>

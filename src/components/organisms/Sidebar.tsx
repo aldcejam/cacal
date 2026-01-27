@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+
 import { getUsuarioAtual } from '../../mocks/usuario';
 
-// Helper Icons locally for now, could be moved to atoms/Icon
+// Icons wrapper for cleaner usage
 const Icons = {
     Home: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
     CreditCard: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>,
@@ -9,9 +9,11 @@ const Icons = {
     PieChart: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></svg>,
     Settings: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.47a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.35a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>,
     Menu: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></svg>,
+    ChevronLeft: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>,
+    DesignSystem: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
 };
 
-type Page = 'visao-geral' | 'cartoes' | 'gastos-recorrentes' | 'dashboard' | 'relatorios' | 'configuracoes';
+type Page = 'visao-geral' | 'cartoes' | 'gastos-recorrentes' | 'dashboard' | 'relatorios' | 'configuracoes' | 'design-system';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -32,6 +34,7 @@ export const Sidebar = ({
         ...(currentUser.isPrincipal ? [{ name: 'Visão Geral', icon: <Icons.Home />, page: 'visao-geral' as Page }] : []),
         { name: 'Meus Cartões', icon: <Icons.CreditCard />, page: 'cartoes' as Page },
         { name: 'Gastos Recorrentes', icon: <Icons.Repeat />, page: 'gastos-recorrentes' as Page },
+        { name: 'Design System', icon: <Icons.DesignSystem />, page: 'design-system' as Page },
         { name: 'Relatórios', icon: <Icons.PieChart />, page: 'relatorios' as Page },
         { name: 'Configurações', icon: <Icons.Settings />, page: 'configuracoes' as Page },
     ];
@@ -40,39 +43,60 @@ export const Sidebar = ({
         <>
             {/* Overlay Mobile */}
             <div
-                className={`fixed inset-0 bg-black/50 z-40 transition-opacity md:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 onClick={toggleSidebar}
             />
 
             {/* Container da Sidebar */}
-            <aside className={`
-        fixed md:sticky top-0 left-0 z-50 h-screen bg-card border-r border-border
-        transition-all duration-300 ease-in-out flex flex-col whitespace-nowrap overflow-hidden
-        ${isOpen ? 'w-64 translate-x-0' : '-translate-x-full md:translate-x-0 md:w-20'}
-      `}>
-                {/* Header da Sidebar (Com o botão Burger Integrado) */}
-                <div className={`h-16 flex items-center px-4 border-b border-border/50 transition-all ${isOpen ? 'justify-between' : 'justify-center'}`}>
+            <aside
+                className={`
+                    fixed top-0 left-0 z-50 h-screen 
+                    bg-background/80 backdrop-blur-xl border-r border-white/10
+                    transition-all duration-300 ease-in-out flex flex-col 
+                    overflow-hidden shadow-2xl shadow-black/50
+                    ${isOpen ? 'w-72 translate-x-0' : '-translate-x-full md:translate-x-0 md:w-20'}
+                `}
+            >
+                {/* Header da Sidebar */}
+                <div className="h-20 flex items-center px-6 border-b border-white/5 shrink-0 relative">
 
-                    {/* Logo e Nome (Visíveis quando aberto) */}
-                    <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
-                        <div className="w-8 h-8 min-w-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-900/20">
-                            <div className="w-4 h-4 bg-white rounded-full opacity-90" />
+                    {/* Logo Area */}
+                    <div className={`flex items-center gap-4 overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'}`}>
+                        <div className="relative group cursor-pointer">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl blur opacity-40 group-hover:opacity-75 transition duration-500"></div>
+                            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-900/30">
+                                <div className="w-5 h-5 bg-white rounded-full opacity-90 shadow-inner" />
+                            </div>
                         </div>
-                        <span className="font-bold text-xl tracking-tight text-foreground">MinhasContas</span>
+                        <div className="flex flex-col">
+                            <span className="font-bold text-lg tracking-tight text-foreground leading-tight">MinhasContas</span>
+                            <span className="text-[10px] uppercase tracking-widest text-emerald-500 font-semibold">Premium</span>
+                        </div>
                     </div>
 
-                    {/* Botão Burger (Dentro da Sidebar) */}
+                    {/* Toggle Button - Desktop (Absolute to be independent of flex flow when collapsed) */}
                     <button
                         onClick={toggleSidebar}
-                        className={`p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors ${!isOpen && 'md:mx-auto'}`}
+                        className={`
+                            absolute right-4 top-1/2 -translate-y-1/2
+                            p-2 rounded-full 
+                            text-muted-foreground hover:text-white 
+                            bg-transparent hover:bg-white/5 
+                            transition-all duration-200
+                            ${!isOpen ? 'left-1/2 -translate-x-1/2 right-auto' : ''}
+                        `}
                         title={isOpen ? "Recolher Menu" : "Expandir Menu"}
                     >
-                        <Icons.Menu />
+                        {isOpen ? <Icons.ChevronLeft /> : <Icons.Menu />}
                     </button>
                 </div>
 
                 {/* Navegação */}
-                <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto scrollbar-hide">
+                <nav className="flex-1 py-8 px-4 space-y-2 overflow-y-auto scrollbar-hide">
+                    <div className={`px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider transition-opacity duration-300 ${!isOpen && 'opacity-0 hidden'}`}>
+                        Menu Principal
+                    </div>
+
                     {menuItems.map((item) => {
                         const isActive = currentPage === item.page;
                         return (
@@ -81,21 +105,28 @@ export const Sidebar = ({
                                 onClick={() => onNavigate(item.page)}
                                 title={!isOpen ? item.name : ''}
                                 className={`
-                  w-full flex items-center rounded-lg text-sm font-medium transition-all duration-200 group
-                  ${isActive
-                                        ? 'bg-primary/10 text-primary shadow-sm'
-                                        : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'}
-                  ${isOpen ? 'px-3 py-2.5 gap-3' : 'justify-center py-3 px-0'}
-                `}
+                                    w-full flex items-center rounded-xl text-sm font-medium transition-all duration-300 group relative overflow-hidden
+                                    ${isActive
+                                        ? 'text-white shadow-lg shadow-emerald-900/20'
+                                        : 'text-muted-foreground hover:text-white hover:bg-white/5'}
+                                    ${isOpen ? 'px-4 py-3.5 gap-4' : 'justify-center py-3.5 px-0'}
+                                `}
                             >
-                                <span className="min-w-[20px]">{item.icon}</span>
-                                <span className={`transition-opacity duration-200 ${isOpen ? 'opacity-100' : 'opacity-0 hidden'}`}>
+                                {isActive && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/90 to-teal-600/90 opacity-100 transition-opacity duration-300" />
+                                )}
+
+                                <span className={`relative z-10 min-w-[20px] transition-transform duration-300 ${!isOpen && isActive ? 'text-emerald-400' : ''} ${!isOpen && 'hover:scale-110'}`}>
+                                    {item.icon}
+                                </span>
+
+                                <span className={`relative z-10 transition-all duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 absolute'}`}>
                                     {item.name}
                                 </span>
 
-                                {/* Tooltip simples para modo colapsado */}
+                                {/* Tooltip for collapsed state */}
                                 {!isOpen && (
-                                    <div className="hidden md:group-hover:block absolute left-16 bg-popover text-popover-foreground text-xs px-2 py-1 rounded shadow-md border border-border z-50 whitespace-nowrap ml-2">
+                                    <div className="opacity-0 group-hover:opacity-100 absolute left-[calc(100%+16px)] top-1/2 -translate-y-1/2 bg-popover/90 backdrop-blur-md text-popover-foreground text-xs font-medium px-3 py-1.5 rounded-lg shadow-xl border border-white/10 whitespace-nowrap z-50 pointer-events-none transition-all duration-200 translate-x-2 group-hover:translate-x-0">
                                         {item.name}
                                     </div>
                                 )}
@@ -104,14 +135,40 @@ export const Sidebar = ({
                     })}
                 </nav>
 
-                {/* Footer / Usuário */}
-                <div className="p-4 border-t border-border/50">
-                    <div className={`flex items-center rounded-xl bg-secondary/30 border border-border/50 transition-all ${isOpen ? 'gap-3 p-3' : 'justify-center p-2'}`}>
-                        <div className="w-8 h-8 min-w-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500" />
-                        <div className={`flex-1 overflow-hidden transition-all duration-200 ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
-                            <p className="text-sm font-medium truncate text-foreground">{currentUser.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{currentUser.email}</p>
+                {/* Footer / User Profile */}
+                <div className="p-4 border-t border-white/5 shrink-0 bg-black/20">
+                    <div
+                        className={`
+                            flex items-center rounded-2xl 
+                            bg-white/5 hover:bg-white/10 border border-white/5 
+                            transition-all duration-300 cursor-pointer group
+                            backdrop-blur-md
+                            ${isOpen ? 'gap-4 p-3' : 'justify-center p-2 aspect-square'}
+                        `}
+                    >
+                        <div className="relative shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 p-[2px]">
+                                <div className="w-full h-full rounded-full bg-black/50 backdrop-blur-sm overflow-hidden">
+                                    {/* Placeholder for avatar image if available, else standard color */}
+                                </div>
+                            </div>
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full shadow-sm"></div>
                         </div>
+
+                        <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+                            <p className="text-sm font-semibold truncate text-white group-hover:text-emerald-400 transition-colors">
+                                {currentUser.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate opacity-80">
+                                {currentUser.email}
+                            </p>
+                        </div>
+
+                        {isOpen && (
+                            <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+                            </div>
+                        )}
                     </div>
                 </div>
             </aside>
