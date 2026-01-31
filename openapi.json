@@ -1,0 +1,282 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Minhas Contas API",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3000"
+        }
+    ],
+    "paths": {
+        "/usuarios": {
+            "get": {
+                "summary": "Get all users",
+                "operationId": "getUsuarios",
+                "responses": {
+                    "200": {
+                        "description": "List of users",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Usuario"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bancos": {
+            "get": {
+                "summary": "Get all banks",
+                "operationId": "getBancos",
+                "responses": {
+                    "200": {
+                        "description": "List of banks",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Banco"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cartoes": {
+            "get": {
+                "summary": "Get all cards",
+                "operationId": "getCartoes",
+                "responses": {
+                    "200": {
+                        "description": "List of cards",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Cartao"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/transacoes": {
+            "get": {
+                "summary": "Get all transactions",
+                "operationId": "getTransacoes",
+                "responses": {
+                    "200": {
+                        "description": "List of transactions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Transacao"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/receitas": {
+            "get": {
+                "summary": "Get all incomes",
+                "operationId": "getReceitas",
+                "responses": {
+                    "200": {
+                        "description": "List of incomes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Receita"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/gastosRecorrentes": {
+            "get": {
+                "summary": "Get all recurring expenses",
+                "operationId": "getGastosRecorrentes",
+                "responses": {
+                    "200": {
+                        "description": "List of recurring expenses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/GastoRecorrente"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Usuario": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Banco": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "type": "number"
+                    },
+                    "dueDate": {
+                        "type": "string"
+                    },
+                    "closingDate": {
+                        "type": "string"
+                    },
+                    "color": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Cartao": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "lastDigits": {
+                        "type": "string"
+                    },
+                    "limit": {
+                        "type": "number"
+                    },
+                    "available": {
+                        "type": "number"
+                    },
+                    "dueDate": {
+                        "type": "string"
+                    },
+                    "closingDate": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/Usuario"
+                    },
+                    "bank": {
+                        "$ref": "#/components/schemas/Banco"
+                    }
+                }
+            },
+            "Transacao": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "card": {
+                        "$ref": "#/components/schemas/Cartao"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "number"
+                    },
+                    "parcels": {
+                        "type": "string"
+                    },
+                    "total": {
+                        "type": "number"
+                    }
+                }
+            },
+            "Receita": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/Usuario"
+                    },
+                    "descricao": {
+                        "type": "string"
+                    },
+                    "categoria": {
+                        "type": "string"
+                    },
+                    "valor": {
+                        "type": "number"
+                    },
+                    "diaRecebimento": {
+                        "type": "integer"
+                    }
+                }
+            },
+            "GastoRecorrente": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/Usuario"
+                    },
+                    "pagamento": {
+                        "type": "string"
+                    },
+                    "descricao": {
+                        "type": "string"
+                    },
+                    "categoria": {
+                        "type": "string"
+                    },
+                    "valor": {
+                        "type": "number"
+                    }
+                }
+            }
+        }
+    }
+}
