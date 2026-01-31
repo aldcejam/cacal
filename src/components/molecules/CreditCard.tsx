@@ -1,4 +1,3 @@
-import React from 'react';
 import { Typography } from '../atoms/Typography';
 
 // Using a simplified interface based on usage

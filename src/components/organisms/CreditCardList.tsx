@@ -1,8 +1,6 @@
-import React from 'react';
 import { CreditCard } from '../molecules/CreditCard';
 
-// @ts-ignore
-import { Card } from '../../mocks/cartao';
+import { type Card } from '../../types';
 
 interface CreditCardListProps {
     cards: Card[];

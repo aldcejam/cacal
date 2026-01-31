@@ -4,13 +4,16 @@ import type { Page } from '../../types';
 
 
 
+import { type Usuario } from '../../types';
+
 interface MainLayoutProps {
     children: React.ReactNode;
     currentPage: Page;
     onNavigate: (page: Page) => void;
+    currentUser: Usuario | null;
 }
 
-export const MainLayout = ({ children, currentPage, onNavigate }: MainLayoutProps) => {
+export const MainLayout = ({ children, currentPage, onNavigate, currentUser }: MainLayoutProps) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -43,6 +46,7 @@ export const MainLayout = ({ children, currentPage, onNavigate }: MainLayoutProp
                 toggleSidebar={toggleSidebar}
                 currentPage={currentPage}
                 onNavigate={handleNavigate}
+                currentUser={currentUser}
             />
 
             <main

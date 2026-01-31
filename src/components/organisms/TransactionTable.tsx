@@ -1,6 +1,5 @@
-import React from 'react';
 import { Badge } from '../atoms/Badge';
-import { type Card } from '../../mocks/cartao';
+import { type Card } from '../../types';
 
 interface Transaction {
     id: string;
@@ -27,7 +26,7 @@ interface TransactionTableProps {
 export const TransactionTable = ({
     transactions,
     // cards, // Unused but kept for props compatibility if parents pass it -> actually removing to fix lint
-    selectedIds = [],
+    // selectedIds = [], // Unused
     title = "Despesas",
     onSort,
     sortConfig,

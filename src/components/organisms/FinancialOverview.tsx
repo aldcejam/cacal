@@ -1,63 +1,81 @@
-import React, { useMemo } from 'react';
-// @ts-ignore
-import { receitasData } from '../../mocks/receitas';
-// @ts-ignore
-import { transactionsData } from '../../mocks/transacao';
-// @ts-ignore
-import { gastosRecorrentesData } from '../../mocks/gastoRecorrente';
-// @ts-ignore
-import { usuarios } from '../../mocks/usuario';
-// @ts-ignore
-import { creditCards } from '../../mocks/cartao';
+import { useMemo } from 'react';
+import { type Receita, type Transaction, type GastoRecorrente, type Usuario, type Card } from '../../types';
 
+interface FinancialOverviewProps {
+    onUserClick?: (userId: string) => void;
+    receitas: Receita[];
+    transactions: Transaction[];
+    recurringExpenses: GastoRecorrente[];
+    usuarios: Usuario[];
+    cards: Card[];
+}
 
+// Helper for color generation
+const stringToColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
+};
 
-export const FinancialOverview = ({ onUserClick }: { onUserClick?: (userId: string) => void }) => {
+export const FinancialOverview = ({
+    onUserClick,
+    receitas,
+    transactions,
+    recurringExpenses,
+    usuarios,
+    cards
+}: FinancialOverviewProps) => {
     // 1. Calculate Family Totals
     const familyTotals = useMemo(() => {
-        const totalIncome = receitasData.reduce((acc: number, r: any) => acc + r.valor, 0);
+        const totalIncome = receitas.reduce((acc, r) => acc + r.valor, 0);
 
-        const totalRecurring = gastosRecorrentesData.reduce((acc: number, g: any) => acc + g.valor, 0);
+        const totalRecurring = recurringExpenses.reduce((acc, g) => acc + g.valor, 0);
 
-        const totalCreditCard = transactionsData.reduce((acc: number, t: any) => acc + t.value, 0);
+        const totalCreditCard = transactions.reduce((acc, t) => acc + t.value, 0);
 
         const totalExpenses = totalRecurring + totalCreditCard;
         const balance = totalIncome - totalExpenses;
 
         return { totalIncome, totalExpenses, balance, totalRecurring, totalCreditCard };
-    }, []);
+    }, [receitas, recurringExpenses, transactions]);
 
     // 2. Calculate Per User
     const userStats = useMemo(() => {
-        return usuarios.map((user: any) => {
-            const userIncome = receitasData
-                .filter((r: any) => r.userId === user.id)
-                .reduce((acc: number, r: any) => acc + r.valor, 0);
+        return usuarios.map((user) => {
+            const userIncome = receitas
+                .filter((r) => r.user.id === user.id)
+                .reduce((acc, r) => acc + r.valor, 0);
 
-            const userRecurring = gastosRecorrentesData
-                .filter((g: any) => g.userId === user.id)
-                .reduce((acc: number, g: any) => acc + g.valor, 0);
+            const userRecurring = recurringExpenses
+                .filter((g) => g.user.id === user.id)
+                .reduce((acc, g) => acc + g.valor, 0);
 
             // Find user's cards
-            const userCardIds = creditCards
-                .filter((c: any) => c.user.id === user.id)
-                .map((c: any) => c.id);
+            const userCardIds = cards
+                .filter((c) => c.user.id === user.id)
+                .map((c) => c.id);
 
-            const userCreditCard = transactionsData
-                .filter((t: any) => userCardIds.includes(t.cardId))
-                .reduce((acc: number, t: any) => acc + t.value, 0);
+            const userCreditCard = transactions
+                .filter((t) => userCardIds.includes(t.card.id))
+                .reduce((acc, t) => acc + t.value, 0);
 
             const totalExpenses = userRecurring + userCreditCard;
             const balance = userIncome - totalExpenses;
+
+            const userColor = stringToColor(user.name);
 
             return {
                 user,
                 userIncome,
                 userExpenses: totalExpenses,
-                userBalance: balance
+                userBalance: balance,
+                userColor
             };
         });
-    }, []);
+    }, [usuarios, receitas, recurringExpenses, cards, transactions]);
 
     return (
         <section className="mb-8 space-y-6">
@@ -100,7 +118,7 @@ export const FinancialOverview = ({ onUserClick }: { onUserClick?: (userId: stri
 
             {/* Users Breakdown */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {userStats.map(({ user, userIncome, userExpenses, userBalance }) => (
+                {userStats.map(({ user, userIncome, userExpenses, userBalance, userColor }) => (
                     <div
                         key={user.id}
                         onClick={() => onUserClick && onUserClick(user.id)}
@@ -111,7 +129,7 @@ export const FinancialOverview = ({ onUserClick }: { onUserClick?: (userId: stri
                         `}
                     >
                         <div className="flex items-center gap-3 mb-4 border-b border-border/50 pb-3">
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm transition-transform group-hover:scale-110" style={{ backgroundColor: user.color }}>
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm transition-transform group-hover:scale-110" style={{ backgroundColor: userColor }}>
                                 {user.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="overflow-hidden">

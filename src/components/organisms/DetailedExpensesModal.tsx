@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Modal } from '../molecules/Modal';
 import { Carousel } from '../molecules/Carousel';
 import { CreditCard } from '../molecules/CreditCard';
@@ -7,10 +7,7 @@ import { TransactionTable } from './TransactionTable';
 import { Typography } from '../atoms/Typography';
 import { Button } from '../atoms/Button';
 
-import { usuarios } from '../../mocks/usuario';
-import { creditCards } from '../../mocks/cartao';
-import { gastosRecorrentesData } from '../../mocks/gastoRecorrente';
-import { transactionsData } from '../../mocks/transacao';
+import { type Usuario, type Card, type GastoRecorrente, type Transaction } from '../../types';
 
 // Helper for color generation
 const stringToColor = (str: string) => {
@@ -26,21 +23,35 @@ interface DetailedExpensesModalProps {
     isOpen: boolean;
     onClose: () => void;
     initialUserId: string | null;
+    usuarios: Usuario[];
+    creditCards: Card[];
+    recurringExpenses: GastoRecorrente[];
+    transactions: Transaction[];
 }
 
-export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: DetailedExpensesModalProps) => {
+export const DetailedExpensesModal = ({
+    isOpen,
+    onClose,
+    initialUserId,
+    usuarios,
+    creditCards,
+    recurringExpenses,
+    transactions
+}: DetailedExpensesModalProps) => {
     // State for filtering users
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+
+    // ... rest of the component logic ...
 
     // Initialize selected users when modal opens or initialUserId changes
     useEffect(() => {
         if (isOpen && initialUserId) {
             setSelectedUserIds([initialUserId]);
-        } else if (isOpen && !initialUserId && selectedUserIds.length === 0) {
+        } else if (isOpen && !initialUserId && selectedUserIds.length === 0 && usuarios.length > 0) {
             // Default to all users if none selected
             setSelectedUserIds([usuarios[0].id]);
         }
-    }, [isOpen, initialUserId]);
+    }, [isOpen, initialUserId, usuarios]);
 
     const handleToggleUser = (userId: string) => {
         setSelectedUserIds(prev =>
@@ -52,24 +63,24 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
 
     // Filter Data based on selectedUserIds
     const filteredCreditCards = useMemo(() => {
-        return creditCards.filter((c: any) => selectedUserIds.includes(c.user.id));
-    }, [selectedUserIds]);
+        return creditCards.filter((c) => selectedUserIds.includes(c.user.id));
+    }, [selectedUserIds, creditCards]);
 
     const filteredRecurringExpenses = useMemo(() => {
-        return gastosRecorrentesData.filter((g: any) => selectedUserIds.includes(g.user.id));
-    }, [selectedUserIds]);
+        return recurringExpenses.filter((g) => selectedUserIds.includes(g.user.id));
+    }, [selectedUserIds, recurringExpenses]);
 
     // Cards Selection Logic for Table
     const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
 
     useEffect(() => {
         // Init with all visible credit cards
-        const cardIds = filteredCreditCards.map((c: any) => c.id);
+        const cardIds = filteredCreditCards.map((c) => c.id);
 
         // Init with all visible recurring GROUPS
         // We need to know which USERS have recurring expenses in the filtered list
-        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g: any) => g.user.id)));
-        const recurringGroupIds = usersWithRecurring.map((userId: any) => `recurring-group-${userId}`);
+        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g) => g.user.id)));
+        const recurringGroupIds = usersWithRecurring.map((userId) => `recurring-group-${userId}`);
 
         setSelectedCardIds([...cardIds, ...recurringGroupIds]);
 
@@ -83,10 +94,10 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
     };
 
     // Derived Selection State (for buttons)
-    const allCardIds = useMemo(() => filteredCreditCards.map((c: any) => c.id), [filteredCreditCards]);
+    const allCardIds = useMemo(() => filteredCreditCards.map((c) => c.id), [filteredCreditCards]);
     const allRecurringGroupIds = useMemo(() => {
-        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g: any) => g.user.id)));
-        return usersWithRecurring.map((userId: any) => `recurring-group-${userId}`);
+        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g) => g.user.id)));
+        return usersWithRecurring.map((userId) => `recurring-group-${userId}`);
     }, [filteredRecurringExpenses]);
 
     const isAllCardsSelected = allCardIds.length > 0 && allCardIds.every(id => selectedCardIds.includes(id));
@@ -135,8 +146,8 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
 
         // 1. Credit Card Transactions
         // Filter by actually selected card IDs
-        const activeCardIds = filteredCreditCards.map((c: any) => c.id).filter((id: string) => selectedCardIds.includes(id));
-        const relevantTransactions = transactionsData.filter((t: any) => activeCardIds.includes(t.card.id));
+        const activeCardIds = filteredCreditCards.map((c) => c.id).filter((id) => selectedCardIds.includes(id));
+        const relevantTransactions = transactions.filter((t) => activeCardIds.includes(t.card.id));
         combined.push(...relevantTransactions);
 
         // 2. Recurring Transactions
@@ -144,9 +155,9 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
         const activeRecurringGroupIds = selectedCardIds.filter(id => id.startsWith('recurring-group-'));
         const activeUserIds = activeRecurringGroupIds.map(id => id.replace('recurring-group-', ''));
 
-        const activeRecurring = filteredRecurringExpenses.filter((g: any) => activeUserIds.includes(g.user.id));
+        const activeRecurring = filteredRecurringExpenses.filter((g) => activeUserIds.includes(g.user.id));
 
-        const recurringAsTransactions = activeRecurring.map((g: any) => ({
+        const recurringAsTransactions = activeRecurring.map((g) => ({
             id: `rec-${g.id}`,
             card: { bank: { name: 'Recorrente', color: '#10b981' }, id: 'recurring' }, // Mock object for compat
             description: g.descricao,
@@ -162,13 +173,14 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
         combined.push(...recurringAsTransactions);
 
         return combined.sort((a, b) => b.value - a.value); // Sort by value desc
-    }, [selectedCardIds, filteredCreditCards, filteredRecurringExpenses]);
+    }, [selectedCardIds, filteredCreditCards, filteredRecurringExpenses, transactions]);
 
     // Group Recurring Expenses by User
     const groupedRecurringExpenses = useMemo(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const groups: { [key: string]: { userId: string, total: number, count: number, user: any } } = {};
 
-        filteredRecurringExpenses.forEach((g: any) => {
+        filteredRecurringExpenses.forEach((g) => {
             if (!groups[g.user.id]) {
                 const user = g.user;
                 groups[g.user.id] = { userId: g.user.id, total: 0, count: 0, user };
@@ -191,7 +203,7 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
 
                 {/* 1. User Filter */}
                 <div className="flex justify-center gap-4 py-2 overflow-x-auto">
-                    {usuarios.map((user: any) => {
+                    {usuarios.map((user) => {
                         const isSelected = selectedUserIds.includes(user.id);
                         const userColor = stringToColor(user.name);
                         return (
@@ -256,7 +268,7 @@ export const DetailedExpensesModal = ({ isOpen, onClose, initialUserId }: Detail
                                 Cartões de Crédito ({filteredCreditCards.length})
                             </Typography>
                             <Carousel>
-                                {filteredCreditCards.map((card: any) => (
+                                {filteredCreditCards.map((card) => (
                                     <div key={card.id} className="w-[300px] shrink-0 p-1">
                                         <CreditCard
                                             card={card}

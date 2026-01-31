@@ -1,6 +1,6 @@
 import { creditCards, type Card } from "./cartao";
 
-interface Transaction {
+export interface Transaction {
   id: string;
   card: Card;
   description: string;

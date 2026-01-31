@@ -1,4 +1,4 @@
-import { type GastoRecorrente } from '../../mocks/gastoRecorrente';
+import { type GastoRecorrente } from '../../types';
 import { Badge } from '../atoms/Badge';
 
 // Helper for category style reused locally

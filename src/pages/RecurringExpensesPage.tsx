@@ -1,19 +1,47 @@
-import { useState, useMemo } from 'react';
-// @ts-ignore
-import { gastosRecorrentesData, type GastoRecorrente } from '../mocks/gastoRecorrente';
-// @ts-ignore
-import { getUsuarioAtual } from '../mocks/usuario';
+import { useState, useMemo, useEffect } from 'react';
+import { api } from '../services/api';
+import { type GastoRecorrente, type Usuario } from '../types';
 
 import { UserSelector } from '../components/organisms/UserSelector';
 import { MetricCard } from '../components/molecules/MetricCard';
 import { RecurringExpensesTable } from '../components/organisms/RecurringExpensesTable';
 
-
-
 export default function RecurringExpensesPage() {
-    const currentUser = getUsuarioAtual();
-    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([currentUser.id]);
+    const [gastosRecorrentes, setGastosRecorrentes] = useState<GastoRecorrente[]>([]);
+    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [sortConfig, setSortConfig] = useState<any>({ key: null, direction: 'asc' });
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [gastosData, usersData] = await Promise.all([
+                    api.getGastosRecorrentes(),
+                    api.getUsuarios()
+                ]);
+
+                setGastosRecorrentes(gastosData);
+                setUsuarios(usersData);
+
+                if (usersData.length > 0 && selectedUserIds.length === 0) {
+                    setSelectedUserIds([usersData[0].id]);
+                }
+            } catch (err) {
+                console.error("Error fetching recurring expenses data:", err);
+                setError("Failed to load data");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const currentUser = usuarios.length > 0 ? usuarios[0] : null;
 
     // --- Handlers ---
     const handleToggleUser = (userId: string) => {
@@ -35,8 +63,8 @@ export default function RecurringExpensesPage() {
 
     // --- Filtering & Sorting ---
     const filteredGastos = useMemo(() => {
-        return gastosRecorrentesData.filter(g => selectedUserIds.includes(g.user.id));
-    }, [selectedUserIds]);
+        return gastosRecorrentes.filter(g => selectedUserIds.includes(g.user.id));
+    }, [selectedUserIds, gastosRecorrentes]);
 
     const sortedGastos = useMemo(() => {
         let sortableItems = [...filteredGastos];
@@ -58,6 +86,22 @@ export default function RecurringExpensesPage() {
 
     const totalGastos = filteredGastos.reduce((acc, g) => acc + g.valor, 0);
 
+    if (loading) {
+        return (
+            <div className="flex-1 flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex-1 flex items-center justify-center h-full text-red-500">
+                <p>Erro ao carregar dados: {error}</p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex-1 p-6 md:p-8 overflow-y-auto w-full">
             <header className="flex items-center justify-between mb-8 pl-12 md:pl-0">
@@ -68,11 +112,13 @@ export default function RecurringExpensesPage() {
             </header>
 
             <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-                <UserSelector
-                    selectedUserIds={selectedUserIds}
-                    onToggleUser={handleToggleUser}
-                    currentUser={currentUser}
-                />
+                {currentUser && (
+                    <UserSelector
+                        selectedUserIds={selectedUserIds}
+                        onToggleUser={handleToggleUser}
+                        currentUser={currentUser}
+                    />
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <MetricCard

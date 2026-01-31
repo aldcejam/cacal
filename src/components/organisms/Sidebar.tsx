@@ -1,6 +1,4 @@
-
-import { getUsuarioAtual } from '../../mocks/usuario';
-import type { Page } from '../../types';
+import type { Page, Usuario } from '../../types';
 
 // Icons wrapper for cleaner usage
 const Icons = {
@@ -22,15 +20,16 @@ interface SidebarProps {
     toggleSidebar: () => void;
     currentPage: Page;
     onNavigate: (page: Page) => void;
+    currentUser: Usuario | null;
 }
 
 export const Sidebar = ({
     isOpen,
     toggleSidebar,
     currentPage,
-    onNavigate
+    onNavigate,
+    currentUser
 }: SidebarProps) => {
-    const currentUser = getUsuarioAtual();
 
     const menuItems = [
         { name: 'Visão Geral', icon: <Icons.Home />, page: 'visao-geral' as Page },
@@ -139,41 +138,43 @@ export const Sidebar = ({
                 </nav>
 
                 {/* Footer / User Profile */}
-                <div className="p-4 border-t border-white/5 shrink-0 bg-black/20">
-                    <div
-                        className={`
-                            flex items-center rounded-2xl 
-                            bg-white/5 hover:bg-white/10 border border-white/5 
-                            transition-all duration-300 cursor-pointer group
-                            backdrop-blur-md
-                            ${isOpen ? 'gap-4 p-3' : 'justify-center p-2 aspect-square'}
-                        `}
-                    >
-                        <div className="relative shrink-0">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 p-[2px]">
-                                <div className="w-full h-full rounded-full bg-black/50 backdrop-blur-sm overflow-hidden">
-                                    {/* Placeholder for avatar image if available, else standard color */}
+                {currentUser && (
+                    <div className="p-4 border-t border-white/5 shrink-0 bg-black/20">
+                        <div
+                            className={`
+                                flex items-center rounded-2xl 
+                                bg-white/5 hover:bg-white/10 border border-white/5 
+                                transition-all duration-300 cursor-pointer group
+                                backdrop-blur-md
+                                ${isOpen ? 'gap-4 p-3' : 'justify-center p-2 aspect-square'}
+                            `}
+                        >
+                            <div className="relative shrink-0">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 p-[2px]">
+                                    <div className="w-full h-full rounded-full bg-black/50 backdrop-blur-sm overflow-hidden flex items-center justify-center text-white font-bold">
+                                        {currentUser.name.charAt(0).toUpperCase()}
+                                    </div>
                                 </div>
+                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full shadow-sm"></div>
                             </div>
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full shadow-sm"></div>
-                        </div>
 
-                        <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
-                            <p className="text-sm font-semibold truncate text-white group-hover:text-emerald-400 transition-colors">
-                                {currentUser.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate opacity-80">
-                                {currentUser.email}
-                            </p>
-                        </div>
-
-                        {isOpen && (
-                            <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+                            <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+                                <p className="text-sm font-semibold truncate text-white group-hover:text-emerald-400 transition-colors">
+                                    {currentUser.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate opacity-80">
+                                    {currentUser.email}
+                                </p>
                             </div>
-                        )}
+
+                            {isOpen && (
+                                <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </aside>
         </>
     );

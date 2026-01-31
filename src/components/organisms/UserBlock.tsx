@@ -1,6 +1,4 @@
-import { type Card } from '../../mocks/cartao';
-import { type GastoRecorrente } from '../../mocks/gastoRecorrente';
-import { type Usuario } from '../../mocks/usuario';
+import { type Card, type GastoRecorrente, type Usuario } from '../../types';
 import { CreditCard } from '../molecules/CreditCard';
 import { RecurringExpensesCard } from '../molecules/RecurringExpensesCard';
 // We are reusing CreditCard molecule here instead of the inline card

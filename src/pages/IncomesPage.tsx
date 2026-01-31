@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { receitasData, type Receita } from '../mocks/receitas';
-import { getUsuarioAtual } from '../mocks/usuario';
+import { useState, useEffect, useMemo } from 'react';
+import { api } from '../services/api';
+import { type Receita } from '../types';
 
 import { UserSelector } from '../components/organisms/UserSelector';
 import { Button } from '../components/atoms/Button';
@@ -138,10 +138,41 @@ const IncomesTable = ({
 };
 
 export default function IncomesPage() {
-    const currentUser = getUsuarioAtual();
-    const [selectedUserIds, setSelectedUserIds] = useState<string[]>(
-        [currentUser.id]
-    );
+    const [receitas, setReceitas] = useState<Receita[]>([]);
+    const [usuarios, setUsuarios] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+    // Removed currentUser logic that depended on getUsuarioAtual from mocks
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [receitasData, usersData] = await Promise.all([
+                    api.getReceitas(),
+                    api.getUsuarios()
+                ]);
+
+                setReceitas(receitasData);
+                setUsuarios(usersData);
+
+                if (usersData.length > 0 && selectedUserIds.length === 0) {
+                    setSelectedUserIds([usersData[0].id]);
+                }
+            } catch (err) {
+                console.error("Error fetching incomes data:", err);
+                setError("Failed to load incomes data");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const currentUser = usuarios.length > 0 ? usuarios[0] : null;
 
     const handleToggleUser = (userId: string) => {
         setSelectedUserIds(prev => {
@@ -153,21 +184,39 @@ export default function IncomesPage() {
     };
 
     const filteredReceitas = useMemo(() => {
-        return receitasData.filter(r => selectedUserIds.includes(r.user.id));
-    }, [selectedUserIds]);
+        return receitas.filter(r => selectedUserIds.includes(r.user.id));
+    }, [selectedUserIds, receitas]);
 
     const totalIncome = filteredReceitas.reduce((acc, r) => acc + r.valor, 0);
+
+    if (loading) {
+        return (
+            <div className="flex-1 flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex-1 flex items-center justify-center h-full text-red-500">
+                <p>Erro ao carregar dados: {error}</p>
+            </div>
+        );
+    }
 
     return (
         <div className="flex-1 p-6 md:p-8 overflow-y-auto w-full">
             <Header />
 
             <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-                <UserSelector
-                    selectedUserIds={selectedUserIds}
-                    onToggleUser={handleToggleUser}
-                    currentUser={currentUser}
-                />
+                {currentUser && (
+                    <UserSelector
+                        selectedUserIds={selectedUserIds}
+                        onToggleUser={handleToggleUser}
+                        currentUser={currentUser}
+                    />
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <MetricCard

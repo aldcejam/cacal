@@ -1,4 +1,4 @@
-import { StrictMode, useState } from 'react'
+import { StrictMode, useState, useEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 
@@ -9,24 +9,28 @@ import IncomesPage from './pages/IncomesPage';
 import DesignSystemPage from './pages/DesignSystem';
 
 import { MainLayout } from './components/templates/MainLayout'
-import type { Page } from './types';
-
-
+import type { Page, Usuario } from './types';
+import { api } from './services/api';
 
 const AppRoot = () => {
   const [currentPage, setCurrentPage] = useState<Page>('visao-geral');
+  const [currentUser, setCurrentUser] = useState<Usuario | null>(null);
 
-  // Assuming menuItems is defined here or passed as a prop to MainLayout
-  // The provided snippet suggests it might be defined within AppRoot
-  const menuItems = [
-    { id: 'visao-geral', label: 'Visão Geral', icon: 'ri-dashboard-line' },
-    { id: 'cartoes', label: 'Gerenciamento de Cartões', icon: 'ri-bank-card-line' },
-    { id: 'gastos-recorrentes', label: 'Gastos Recorrentes', icon: 'ri-calendar-check-line' },
-    { id: 'design-system', label: 'Design System', icon: 'ri-palette-line' }, // Added Design System menu item
-    { id: 'dashboard', label: 'Dashboard', icon: 'ri-dashboard-line' }, // Existing item, re-added for completeness if this array is new
-    { id: 'relatorios', label: 'Relatórios', icon: 'ri-file-chart-line' }, // Existing item, re-added for completeness
-    { id: 'configuracoes', label: 'Configurações', icon: 'ri-settings-3-line' }, // Existing item, re-added for completeness
-  ];
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const users = await api.getUsuarios();
+        if (users.length > 0) {
+          setCurrentUser(users[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch current user", error);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  // menuItems removed as they are unused here
 
   const renderPage = () => {
     switch (currentPage) {
@@ -55,7 +59,7 @@ const AppRoot = () => {
   };
 
   return (
-    <MainLayout currentPage={currentPage} onNavigate={setCurrentPage}>
+    <MainLayout currentPage={currentPage} onNavigate={setCurrentPage} currentUser={currentUser}>
       {renderPage()}
     </MainLayout>
   );

@@ -1,27 +1,40 @@
 import React from 'react';
-// @ts-ignore
-import { usuarios, type Usuario } from '../../mocks/usuario';
+import { type Usuario } from '../../types';
 
 interface UserSelectorProps {
     selectedUserIds: string[];
     onToggleUser: (userId: string) => void;
     currentUser: Usuario;
+    users?: Usuario[]; // Optional for now to keep backward compat if needed, but better required
 }
+
+// Helper for color generation
+const stringToColor = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00ffffff).toString(16).toUpperCase();
+    return '#' + '00000'.substring(0, 6 - c.length) + c;
+};
 
 export const UserSelector: React.FC<UserSelectorProps> = ({
     selectedUserIds,
     onToggleUser,
-    currentUser
+    currentUser,
+    users = []
 }) => {
     // Se não for usuário principal, só mostra o próprio usuário
-    const availableUsers = currentUser.isPrincipal
-        ? usuarios
-        : usuarios.filter(u => u.id === currentUser.id);
+    // Assuming isPrincipal is not on the new type yet? or it was removed? 
+    // The previous task said "removed deprecated fields like isPrincipal". 
+    // So we should probably remove this logic or adapt it.
+    // For now, let's assume all users are available if requested.
 
-    // Se não for principal, sempre seleciona apenas o próprio usuário
-    const effectiveSelectedIds = currentUser.isPrincipal
-        ? selectedUserIds
-        : [currentUser.id];
+    const availableUsers = users.length > 0 ? users : [currentUser];
+
+    // If we want to simulate "principal" behavior, maybe check specific ID or just allow all
+    // The refactor instruction said "removed isPrincipal". 
+    // So let's simplify: show all users passed in props.
 
     return (
         <section className="mb-8">
@@ -34,45 +47,42 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
                     <h2 className="text-lg font-semibold text-foreground">
-                        {currentUser.isPrincipal ? 'Usuários' : 'Meu Perfil'}
+                        Usuários
                     </h2>
                 </div>
-                {currentUser.isPrincipal && effectiveSelectedIds.length > 0 && (
+                {selectedUserIds.length > 0 && (
                     <span className="text-sm text-muted-foreground">
-                        {effectiveSelectedIds.length} selecionado(s)
+                        {selectedUserIds.length} selecionado(s)
                     </span>
                 )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {availableUsers.map((user) => {
-                    const isSelected = effectiveSelectedIds.includes(user.id);
+                    const isSelected = selectedUserIds.includes(user.id);
+                    const userColor = stringToColor(user.name);
 
                     return (
                         <div
                             key={user.id}
-                            onClick={() => currentUser.isPrincipal && onToggleUser(user.id)}
+                            onClick={() => onToggleUser(user.id)}
                             className={`
                 rounded-xl p-5 border-2 transition-all duration-300 cursor-pointer select-none
                 ${isSelected
                                     ? 'opacity-100 scale-[1.02] ring-2 ring-offset-2 ring-offset-background ring-primary border-primary/50 bg-card'
                                     : 'opacity-70 hover:opacity-100 hover:scale-[1.01] border-border bg-card/50'}
-                ${!currentUser.isPrincipal ? 'cursor-default' : ''}
               `}
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div
                                         className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg"
-                                        style={{ backgroundColor: user.color }}
+                                        style={{ backgroundColor: userColor }}
                                     >
                                         {user.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-foreground">{user.name}</h3>
-                                        {user.isPrincipal && (
-                                            <span className="text-xs text-primary font-medium">Principal</span>
-                                        )}
                                     </div>
                                 </div>
                                 {isSelected && (

@@ -1,0 +1,492 @@
+{
+    "usuarios": [
+        {
+            "id": "u1",
+            "name": "João Silva",
+            "email": "joao@example.com"
+        },
+        {
+            "id": "u2",
+            "name": "Maria Santos",
+            "email": "maria@example.com"
+        },
+        {
+            "id": "u3",
+            "name": "Pedro Costa",
+            "email": "pedro@example.com"
+        },
+        {
+            "id": "u4",
+            "name": "Ana Oliveira",
+            "email": "ana@example.com"
+        }
+    ],
+    "bancos": [
+        {
+            "id": 1,
+            "name": "Nubank",
+            "limit": 5000,
+            "dueDate": "10",
+            "closingDate": "30",
+            "color": "#8A05BE"
+        },
+        {
+            "id": 2,
+            "name": "C6 Bank",
+            "limit": 3000,
+            "dueDate": "15",
+            "closingDate": "28",
+            "color": "#6348B8"
+        },
+        {
+            "id": 3,
+            "name": "Banco Inter",
+            "limit": 4000,
+            "dueDate": "12",
+            "closingDate": "25",
+            "color": "#FF8800"
+        }
+    ],
+    "cartoes": [
+        {
+            "id": "1",
+            "lastDigits": "1234",
+            "limit": 5000,
+            "available": 2660,
+            "dueDate": "2023-10-10",
+            "closingDate": "2023-10-05",
+            "user": {
+                "id": "u1",
+                "name": "João Silva",
+                "email": "joao@example.com"
+            },
+            "bank": {
+                "id": 1,
+                "name": "Nubank",
+                "limit": 5000,
+                "dueDate": "10",
+                "closingDate": "30",
+                "color": "#8A05BE"
+            }
+        },
+        {
+            "id": "2",
+            "lastDigits": "5678",
+            "limit": 8000,
+            "available": 3440,
+            "dueDate": "2023-10-15",
+            "closingDate": "2023-10-10",
+            "user": {
+                "id": "u2",
+                "name": "Maria Santos",
+                "email": "maria@example.com"
+            },
+            "bank": {
+                "id": 2,
+                "name": "C6 Bank",
+                "limit": 3000,
+                "dueDate": "15",
+                "closingDate": "28",
+                "color": "#6348B8"
+            }
+        },
+        {
+            "id": "3",
+            "lastDigits": "9012",
+            "limit": 3500,
+            "available": 2220,
+            "dueDate": "2023-10-20",
+            "closingDate": "2023-10-15",
+            "user": {
+                "id": "u3",
+                "name": "Pedro Costa",
+                "email": "pedro@example.com"
+            },
+            "bank": {
+                "id": 3,
+                "name": "Banco Inter",
+                "limit": 4000,
+                "dueDate": "12",
+                "closingDate": "25",
+                "color": "#FF8800"
+            }
+        }
+    ],
+    "transacoes": [
+        {
+            "id": "t1",
+            "card": {
+                "id": "1",
+                "lastDigits": "1234",
+                "limit": 5000,
+                "available": 2660,
+                "dueDate": "2023-10-10",
+                "closingDate": "2023-10-05",
+                "user": {
+                    "id": "u1",
+                    "name": "João Silva",
+                    "email": "joao@example.com"
+                },
+                "bank": {
+                    "id": 1,
+                    "name": "Nubank",
+                    "limit": 5000,
+                    "dueDate": "10",
+                    "closingDate": "30",
+                    "color": "#8A05BE"
+                }
+            },
+            "description": "Amazon Prime",
+            "category": "Streaming",
+            "value": 14.90,
+            "parcels": "1/1",
+            "total": 14.90
+        },
+        {
+            "id": "t2",
+            "card": {
+                "id": "1",
+                "lastDigits": "1234",
+                "limit": 5000,
+                "available": 2660,
+                "dueDate": "2023-10-10",
+                "closingDate": "2023-10-05",
+                "user": {
+                    "id": "u1",
+                    "name": "João Silva",
+                    "email": "joao@example.com"
+                },
+                "bank": {
+                    "id": 1,
+                    "name": "Nubank",
+                    "limit": 5000,
+                    "dueDate": "10",
+                    "closingDate": "30",
+                    "color": "#8A05BE"
+                }
+            },
+            "description": "iFood",
+            "category": "Alimentação",
+            "value": 45.50,
+            "parcels": "1/1",
+            "total": 45.50
+        },
+        {
+            "id": "t3",
+            "card": {
+                "id": "2",
+                "lastDigits": "5678",
+                "limit": 8000,
+                "available": 3440,
+                "dueDate": "2023-10-15",
+                "closingDate": "2023-10-10",
+                "user": {
+                    "id": "u2",
+                    "name": "Maria Santos",
+                    "email": "maria@example.com"
+                },
+                "bank": {
+                    "id": 2,
+                    "name": "C6 Bank",
+                    "limit": 3000,
+                    "dueDate": "15",
+                    "closingDate": "28",
+                    "color": "#6348B8"
+                }
+            },
+            "description": "Notebook Dell",
+            "category": "Eletrônicos",
+            "value": 299.90,
+            "parcels": "3/12",
+            "total": 3598.80
+        },
+        {
+            "id": "t4",
+            "card": {
+                "id": "2",
+                "lastDigits": "5678",
+                "limit": 8000,
+                "available": 3440,
+                "dueDate": "2023-10-15",
+                "closingDate": "2023-10-10",
+                "user": {
+                    "id": "u2",
+                    "name": "Maria Santos",
+                    "email": "maria@example.com"
+                },
+                "bank": {
+                    "id": 2,
+                    "name": "C6 Bank",
+                    "limit": 3000,
+                    "dueDate": "15",
+                    "closingDate": "28",
+                    "color": "#6348B8"
+                }
+            },
+            "description": "Spotify",
+            "category": "Streaming",
+            "value": 21.90,
+            "parcels": "1/1",
+            "total": 21.90
+        },
+        {
+            "id": "t5",
+            "card": {
+                "id": "3",
+                "lastDigits": "9012",
+                "limit": 3500,
+                "available": 2220,
+                "dueDate": "2023-10-20",
+                "closingDate": "2023-10-15",
+                "user": {
+                    "id": "u3",
+                    "name": "Pedro Costa",
+                    "email": "pedro@example.com"
+                },
+                "bank": {
+                    "id": 3,
+                    "name": "Banco Inter",
+                    "limit": 4000,
+                    "dueDate": "12",
+                    "closingDate": "25",
+                    "color": "#FF8800"
+                }
+            },
+            "description": "Uber",
+            "category": "Transporte",
+            "value": 32.00,
+            "parcels": "1/1",
+            "total": 32.00
+        },
+        {
+            "id": "t6",
+            "card": {
+                "id": "3",
+                "lastDigits": "9012",
+                "limit": 3500,
+                "available": 2220,
+                "dueDate": "2023-10-20",
+                "closingDate": "2023-10-15",
+                "user": {
+                    "id": "u3",
+                    "name": "Pedro Costa",
+                    "email": "pedro@example.com"
+                },
+                "bank": {
+                    "id": 3,
+                    "name": "Banco Inter",
+                    "limit": 4000,
+                    "dueDate": "12",
+                    "closingDate": "25",
+                    "color": "#FF8800"
+                }
+            },
+            "description": "Farmácia",
+            "category": "Saúde",
+            "value": 89.90,
+            "parcels": "2/3",
+            "total": 269.70
+        },
+        {
+            "id": "t7",
+            "card": {
+                "id": "1",
+                "lastDigits": "1234",
+                "limit": 5000,
+                "available": 2660,
+                "dueDate": "2023-10-10",
+                "closingDate": "2023-10-05",
+                "user": {
+                    "id": "u1",
+                    "name": "João Silva",
+                    "email": "joao@example.com"
+                },
+                "bank": {
+                    "id": 1,
+                    "name": "Nubank",
+                    "limit": 5000,
+                    "dueDate": "10",
+                    "closingDate": "30",
+                    "color": "#8A05BE"
+                }
+            },
+            "description": "Netflix",
+            "category": "Streaming",
+            "value": 55.90,
+            "parcels": "1/1",
+            "total": 55.90
+        }
+    ],
+    "receitas": [
+        {
+            "id": "r1",
+            "user": {
+                "id": "u1",
+                "name": "João Silva",
+                "email": "joao@example.com"
+            },
+            "descricao": "Salário Mensal",
+            "categoria": "Salário",
+            "valor": 8500.00,
+            "diaRecebimento": 5
+        },
+        {
+            "id": "r2",
+            "user": {
+                "id": "u1",
+                "name": "João Silva",
+                "email": "joao@example.com"
+            },
+            "descricao": "Vale Refeição",
+            "categoria": "Benefício",
+            "valor": 900.00,
+            "diaRecebimento": 1
+        },
+        {
+            "id": "r3",
+            "user": {
+                "id": "u1",
+                "name": "João Silva",
+                "email": "joao@example.com"
+            },
+            "descricao": "Rendimentos NuBank",
+            "categoria": "Investimento",
+            "valor": 150.45,
+            "diaRecebimento": 15
+        },
+        {
+            "id": "r4",
+            "user": {
+                "id": "u2",
+                "name": "Maria Santos",
+                "email": "maria@example.com"
+            },
+            "descricao": "Salário",
+            "categoria": "Salário",
+            "valor": 6200.00,
+            "diaRecebimento": 5
+        },
+        {
+            "id": "r5",
+            "user": {
+                "id": "u2",
+                "name": "Maria Santos",
+                "email": "maria@example.com"
+            },
+            "descricao": "Auxílio Home Office",
+            "categoria": "Benefício",
+            "valor": 200.00,
+            "diaRecebimento": 5
+        },
+        {
+            "id": "r6",
+            "user": {
+                "id": "u2",
+                "name": "Maria Santos",
+                "email": "maria@example.com"
+            },
+            "descricao": "Venda de Bolos",
+            "categoria": "Extra",
+            "valor": 450.00,
+            "diaRecebimento": 20
+        },
+        {
+            "id": "r7",
+            "user": {
+                "id": "u3",
+                "name": "Pedro Costa",
+                "email": "pedro@example.com"
+            },
+            "descricao": "Bolsa Estágio",
+            "categoria": "Salário",
+            "valor": 1200.00,
+            "diaRecebimento": 10
+        },
+        {
+            "id": "r8",
+            "user": {
+                "id": "u3",
+                "name": "Pedro Costa",
+                "email": "pedro@example.com"
+            },
+            "descricao": "Vale Transporte",
+            "categoria": "Benefício",
+            "valor": 180.00,
+            "diaRecebimento": 1
+        }
+    ],
+    "gastosRecorrentes": [
+        {
+            "id": "gr1",
+            "user": {
+                "id": "u1",
+                "name": "João Silva",
+                "email": "joao@example.com"
+            },
+            "pagamento": "Cartão de Crédito",
+            "descricao": "Netflix",
+            "categoria": "Streaming",
+            "valor": 55.90
+        },
+        {
+            "id": "gr2",
+            "user": {
+                "id": "u1",
+                "name": "João Silva",
+                "email": "joao@example.com"
+            },
+            "pagamento": "Débito Automático",
+            "descricao": "Academia SmartFit",
+            "categoria": "Saúde",
+            "valor": 89.90
+        },
+        {
+            "id": "gr3",
+            "user": {
+                "id": "u2",
+                "name": "Maria Santos",
+                "email": "maria@example.com"
+            },
+            "pagamento": "PIX",
+            "descricao": "Spotify Premium",
+            "categoria": "Streaming",
+            "valor": 21.90
+        },
+        {
+            "id": "gr4",
+            "user": {
+                "id": "u2",
+                "name": "Maria Santos",
+                "email": "maria@example.com"
+            },
+            "pagamento": "Cartão de Crédito",
+            "descricao": "Amazon Prime",
+            "categoria": "Streaming",
+            "valor": 14.90
+        },
+        {
+            "id": "gr5",
+            "user": {
+                "id": "u3",
+                "name": "Pedro Costa",
+                "email": "pedro@example.com"
+            },
+            "pagamento": "Débito Automático",
+            "descricao": "Plano de Celular",
+            "categoria": "Telecomunicações",
+            "valor": 79.90
+        },
+        {
+            "id": "gr6",
+            "user": {
+                "id": "u4",
+                "name": "Ana Oliveira",
+                "email": "ana@example.com"
+            },
+            "pagamento": "PIX",
+            "descricao": "Curso Online",
+            "categoria": "Educação",
+            "valor": 199.90
+        }
+    ]
+}

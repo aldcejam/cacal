@@ -1,4 +1,3 @@
-import React from 'react';
 import { MetricCard } from '../molecules/MetricCard';
 
 interface ResumoCardsProps {

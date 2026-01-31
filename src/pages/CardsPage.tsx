@@ -1,10 +1,6 @@
-import { useState, useMemo } from 'react';
-// @ts-ignore
-import { transactionsData } from '../mocks/transacao';
-// @ts-ignore
-import { creditCards, type Card } from '../mocks/cartao';
-// @ts-ignore
-import { getUsuarioAtual } from '../mocks/usuario';
+import { useState, useMemo, useEffect } from 'react';
+import { api } from '../services/api';
+import { type Transaction, type Card, type Usuario } from '../types';
 
 import { UserSelector } from '../components/organisms/UserSelector';
 import { CreditCardList } from '../components/organisms/CreditCardList';
@@ -16,10 +12,48 @@ interface SortConfig {
 }
 
 export default function CardsPage() {
-    const currentUser = getUsuarioAtual();
-    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([currentUser.id]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [creditCards, setCreditCards] = useState<Card[]>([]);
+    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
+
+    // Fetch Data
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [transData, cardsData, usersData] = await Promise.all([
+                    api.getTransacoes(),
+                    api.getCartoes(),
+                    api.getUsuarios()
+                ]);
+
+                setTransactions(transData);
+                setCreditCards(cardsData);
+                setUsuarios(usersData);
+
+                // Initialize selected user being the first one (simulating current user)
+                if (usersData.length > 0 && selectedUserIds.length === 0) {
+                    setSelectedUserIds([usersData[0].id]);
+                }
+
+            } catch (err) {
+                console.error("Error fetching cards data:", err);
+                setError("Failed to load cards data");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const currentUser = usuarios.length > 0 ? usuarios[0] : null;
 
     // --- Handlers ---
 
@@ -66,7 +100,7 @@ export default function CardsPage() {
     // Filtrar cartões pelos usuários selecionados
     const availableCards = useMemo(() => {
         return creditCards.filter(card => selectedUserIds.includes(card.user.id));
-    }, [selectedUserIds]);
+    }, [selectedUserIds, creditCards]);
 
     // Auto-selecionar primeiro cartão quando usuários mudam
     useMemo(() => {
@@ -79,10 +113,10 @@ export default function CardsPage() {
         } else {
             setSelectedCardIds([]);
         }
-    }, [availableCards]);
+    }, [availableCards]); // Careful with dependency loop here, technically safe as selectedCardIds update won't trigger this again unless availableCards changes
 
     const filteredTransactions = useMemo(() => {
-        let data = transactionsData;
+        let data = transactions;
 
         // Primeiro filtrar por cartões dos usuários selecionados
         const userCardIds = availableCards.map(c => c.id);
@@ -114,7 +148,7 @@ export default function CardsPage() {
         }
 
         return data;
-    }, [selectedCardIds, sortConfig, availableCards]);
+    }, [selectedCardIds, sortConfig, availableCards, transactions]);
 
     const getSelectedCardNames = () => {
         if (selectedCardIds.length === 0) return '';
@@ -142,16 +176,34 @@ export default function CardsPage() {
         </header>
     );
 
+    if (loading) {
+        return (
+            <div className="flex-1 flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex-1 flex items-center justify-center h-full text-red-500">
+                <p>Erro ao carregar dados: {error}</p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex-1 p-6 md:p-8 overflow-y-auto w-full">
             <Header />
 
             <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
-                <UserSelector
-                    selectedUserIds={selectedUserIds}
-                    onToggleUser={handleToggleUser}
-                    currentUser={currentUser}
-                />
+                {currentUser && (
+                    <UserSelector
+                        selectedUserIds={selectedUserIds}
+                        onToggleUser={handleToggleUser}
+                        currentUser={currentUser}
+                    />
+                )}
 
                 <CreditCardList
                     cards={availableCards}
@@ -161,7 +213,6 @@ export default function CardsPage() {
 
                 <TransactionTable
                     transactions={filteredTransactions}
-                    cards={availableCards}
                     sortConfig={sortConfig}
                     onSort={handleSort}
                     title={selectedCardIds.length > 0 ? `Despesas: ${getSelectedCardNames()}` : 'Despesas'}
