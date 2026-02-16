@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../organisms/Sidebar';
 import type { Page } from '../../types';
-
-
-
-import { type Usuario } from '../../types';
+import type { Usuario } from '../../api/services/usuario/@types/Usuario';
 
 interface MainLayoutProps {
     children: React.ReactNode;

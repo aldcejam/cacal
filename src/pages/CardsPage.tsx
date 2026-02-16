@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { api } from '../services/api';
-import { type Transaction, type Card, type Usuario } from '../types';
+import { useTransacoes } from '../hooks/api/useTransacoes';
+import { useCartoes } from '../hooks/api/useCartoes';
+import { useUsuarios } from '../hooks/api/useUsuarios';
 
 import { UserSelector } from '../components/organisms/UserSelector';
 import { CreditCardList } from '../components/organisms/CreditCardList';
@@ -12,46 +13,26 @@ interface SortConfig {
 }
 
 export default function CardsPage() {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [creditCards, setCreditCards] = useState<Card[]>([]);
-    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: transactions = [], isLoading: loadingTrans, error: errorTrans } = useTransacoes();
+    const { data: creditCards = [], isLoading: loadingCards, error: errorCards } = useCartoes();
+    const { data: usuarios = [], isLoading: loadingUsers, error: errorUsers } = useUsuarios();
+
+    const loading = loadingTrans || loadingCards || loadingUsers;
+    const error = errorTrans || errorCards || errorUsers ? "Failed to load cards data" : null;
 
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [selectedCardIds, setSelectedCardIds] = useState<string[]>([]);
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 
-    // Fetch Data
+    // Fetch Data -- Removed manual fetch
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [transData, cardsData, usersData] = await Promise.all([
-                    api.getTransacoes(),
-                    api.getCartoes(),
-                    api.getUsuarios()
-                ]);
-
-                setTransactions(transData);
-                setCreditCards(cardsData);
-                setUsuarios(usersData);
-
-                // Initialize selected user being the first one (simulating current user)
-                if (usersData.length > 0 && selectedUserIds.length === 0) {
-                    setSelectedUserIds([usersData[0].id]);
-                }
-
-            } catch (err) {
-                console.error("Error fetching cards data:", err);
-                setError("Failed to load cards data");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
+        // Initialize selected user being the first one (simulating current user)
+        if (usuarios.length > 0 && selectedUserIds.length === 0) {
+            const firstId = usuarios[0].id;
+            if (firstId) setSelectedUserIds([firstId]);
+        }
+    }, [usuarios]);
 
     const currentUser = usuarios.length > 0 ? usuarios[0] : null;
 
@@ -64,8 +45,8 @@ export default function CardsPage() {
                 // Se desmarcou usuário, remove seus cartões da seleção
                 if (newIds.length > 0) {
                     const cardsToKeep = creditCards
-                        .filter(c => newIds.includes(c.user.id))
-                        .map(c => c.id);
+                        .filter(c => c.user?.id && newIds.includes(c.user.id))
+                        .map(c => c.id || '');
                     setSelectedCardIds(prevCards =>
                         prevCards.filter(cardId => cardsToKeep.includes(cardId))
                     );
@@ -99,16 +80,17 @@ export default function CardsPage() {
 
     // Filtrar cartões pelos usuários selecionados
     const availableCards = useMemo(() => {
-        return creditCards.filter(card => selectedUserIds.includes(card.user.id));
+        return creditCards.filter(card => card.user?.id && selectedUserIds.includes(card.user.id));
     }, [selectedUserIds, creditCards]);
 
     // Auto-selecionar primeiro cartão quando usuários mudam
     useMemo(() => {
         if (availableCards.length > 0 && selectedCardIds.length === 0) {
-            setSelectedCardIds([availableCards[0].id]);
+            const firstId = availableCards[0].id;
+            if (firstId) setSelectedCardIds([firstId]);
         } else if (availableCards.length > 0) {
             // Manter apenas cartões dos usuários selecionados
-            const validCardIds = availableCards.map(c => c.id);
+            const validCardIds = availableCards.map(c => c.id || '').filter(id => id !== '');
             setSelectedCardIds(prev => prev.filter(id => validCardIds.includes(id)));
         } else {
             setSelectedCardIds([]);
@@ -119,12 +101,12 @@ export default function CardsPage() {
         let data = transactions;
 
         // Primeiro filtrar por cartões dos usuários selecionados
-        const userCardIds = availableCards.map(c => c.id);
-        data = data.filter(t => userCardIds.includes(t.card.id));
+        const userCardIds = availableCards.map(c => c.id || '').filter(id => id !== '');
+        data = data.filter(t => t.card?.id && userCardIds.includes(t.card.id));
 
         // Depois filtrar por cartões selecionados
         if (selectedCardIds.length > 0) {
-            data = data.filter(t => selectedCardIds.includes(t.card.id));
+            data = data.filter(t => t.card?.id && selectedCardIds.includes(t.card.id));
         } else {
             return [];
         }
@@ -134,11 +116,11 @@ export default function CardsPage() {
                 let valA: number, valB: number;
 
                 if (sortConfig.key === 'value') {
-                    valA = a.value;
-                    valB = b.value;
+                    valA = a.value || 0;
+                    valB = b.value || 0;
                 } else {
-                    valA = parseInt(a.parcels.split('/')[0]) || 1;
-                    valB = parseInt(b.parcels.split('/')[0]) || 1;
+                    valA = parseInt((a.parcels || '').split('/')[0]) || 1;
+                    valB = parseInt((b.parcels || '').split('/')[0]) || 1;
                 }
 
                 if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -155,8 +137,8 @@ export default function CardsPage() {
         if (selectedCardIds.length === availableCards.length) return 'Todos os Cartões';
 
         const names = availableCards
-            .filter(c => selectedCardIds.includes(c.id))
-            .map(c => `${c.bank.name} ${c.lastDigits}`);
+            .filter(c => c.id && selectedCardIds.includes(c.id))
+            .map(c => `${c.bank?.name || 'Banco'} ${c.lastDigits || ''}`);
 
         if (names.length <= 2) return names.join(' e ');
         return `${names[0]} e mais ${names.length - 1}`;

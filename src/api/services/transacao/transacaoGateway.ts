@@ -4,7 +4,7 @@ import type { Transacao } from "./@types/Transacao";
 
 export const transacaoGateway = {
   findAll: async (input: ServiceInputProps<null, null>) => (
-    await gerarService({
+    await gerarService<Transacao[]>({
       endpoint: `/transacoes`,
       method: "GET",
       options: input

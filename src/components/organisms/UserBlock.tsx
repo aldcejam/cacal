@@ -1,11 +1,13 @@
-import { type Card, type GastoRecorrente, type Usuario } from '../../types';
+import type { Usuario } from '../../api/services/usuario/@types/Usuario';
+import type { Cartao } from '../../api/services/cartao/@types/Cartao';
+import type { GastoRecorrente } from '../../api/services/gastoRecorrente/@types/GastoRecorrente';
 import { CreditCard } from '../molecules/CreditCard';
 import { RecurringExpensesCard } from '../molecules/RecurringExpensesCard';
 // We are reusing CreditCard molecule here instead of the inline card
 
 interface UserBlockProps {
     user: Usuario;
-    cards: Card[];
+    cards: Cartao[];
     gastosRecorrentes: GastoRecorrente[];
     selectedCardIds: string[];
     onToggleCard: (cardId: string) => void;
@@ -28,8 +30,8 @@ export const UserBlock: React.FC<UserBlockProps> = ({
     selectedCardIds,
     onToggleCard
 }) => {
-    const totalGastos = gastosRecorrentes.reduce((acc, g) => acc + g.valor, 0);
-    const userColor = stringToColor(user.name);
+    const totalGastos = gastosRecorrentes.reduce((acc, g) => acc + (g.valor || 0), 0);
+    const userColor = stringToColor(user.name || 'User');
 
     return (
         <div className="min-w-[90vw] md:min-w-[600px] lg:min-w-[700px] bg-card rounded-xl border border-border/50 p-6 shadow-sm">
@@ -39,11 +41,11 @@ export const UserBlock: React.FC<UserBlockProps> = ({
                     className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
                     style={{ backgroundColor: userColor }}
                 >
-                    {user.name.charAt(0).toUpperCase()}
+                    {(user.name || 'U').charAt(0).toUpperCase()}
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-foreground">{user.name}</h3>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <h3 className="text-xl font-bold text-foreground">{user.name || 'Usuário'}</h3>
+                    <p className="text-sm text-muted-foreground">{user.email || 'sem@email.com'}</p>
                 </div>
             </div>
 
@@ -63,15 +65,18 @@ export const UserBlock: React.FC<UserBlockProps> = ({
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {cards.map((card) => (
-                            <CreditCard
-                                key={card.id}
-                                card={card}
-                                isSelected={selectedCardIds.includes(card.id)}
-                                onClick={() => onToggleCard(card.id)}
-                                showProgressBar={false}
-                            />
-                        ))}
+                        {cards.map((card) => {
+                            const cardId = card.id || Math.random().toString();
+                            return (
+                                <CreditCard
+                                    key={cardId}
+                                    card={card}
+                                    isSelected={selectedCardIds.includes(cardId)}
+                                    onClick={() => onToggleCard(cardId)}
+                                    showProgressBar={false}
+                                />
+                            );
+                        })}
                     </div>
                 )}
             </div>

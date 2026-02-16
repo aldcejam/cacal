@@ -1,4 +1,4 @@
-import { type GastoRecorrente } from '../../types';
+import type { GastoRecorrente } from '../../api/services/gastoRecorrente/@types/GastoRecorrente';
 import { Badge } from '../atoms/Badge';
 
 // Helper for category style reused locally
@@ -112,22 +112,22 @@ export const RecurringExpensesTable = ({
                             <tbody className="[&_tr:last-child]:border-0">
                                 {gastos.map((gasto) => {
                                     const user = gasto.user;
-                                    const userColor = stringToColor(user.name);
+                                    const userColor = stringToColor(user?.name || 'User');
                                     return (
-                                        <tr key={gasto.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+                                        <tr key={gasto.id || Math.random().toString()} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                                             {showUserColumn && user && (
                                                 <td className="p-4 align-middle">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: userColor }}>
-                                                            {user.name.charAt(0).toUpperCase()}
+                                                            {(user.name || 'U').charAt(0).toUpperCase()}
                                                         </div>
-                                                        <span className="text-foreground font-medium text-sm">{user.name}</span>
+                                                        <span className="text-foreground font-medium text-sm">{user.name || 'Usuário'}</span>
                                                     </div>
                                                 </td>
                                             )}
                                             <td className="p-4 align-middle text-foreground font-medium">{gasto.descricao}</td>
                                             <td className="p-4 align-middle">
-                                                <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${getPaymentStyle(gasto.pagamento)}`}>
+                                                <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${getPaymentStyle(gasto.pagamento || '')}`}>
                                                     {gasto.pagamento}
                                                 </div>
                                             </td>
@@ -136,7 +136,7 @@ export const RecurringExpensesTable = ({
                                                 <Badge variant={getCategoryColor(gasto.categoria)}>{gasto.categoria}</Badge>
                                             </td>
                                             <td className="p-4 align-middle text-right text-foreground font-medium">
-                                                R$ {gasto.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                R$ {(gasto.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                             </td>
                                             <td className="p-4 align-middle text-center">
                                                 <div className="flex items-center justify-center gap-2">

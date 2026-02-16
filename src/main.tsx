@@ -1,4 +1,4 @@
-import { StrictMode, useState, useEffect } from 'react'
+import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 
@@ -9,27 +9,23 @@ import IncomesPage from './pages/IncomesPage';
 import DesignSystemPage from './pages/DesignSystem';
 
 import { MainLayout } from './components/templates/MainLayout'
-import type { Page, Usuario } from './types';
-import { api } from './services/api';
+import type { Page } from './types';
 import { ToastContainer } from 'react-toastify';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useUsuarios } from './hooks/api/useUsuarios';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: true,
+    },
+  },
+});
 
 const AppRoot = () => {
   const [currentPage, setCurrentPage] = useState<Page>('visao-geral');
-  const [currentUser, setCurrentUser] = useState<Usuario | null>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const users = await api.getUsuarios();
-        if (users.length > 0) {
-          setCurrentUser(users[0]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch current user", error);
-      }
-    };
-    fetchUser();
-  }, []);
+  const { data: usuarios = [] } = useUsuarios();
+  const currentUser = usuarios.length > 0 ? usuarios[0] : null;
 
   // menuItems removed as they are unused here
 
@@ -69,6 +65,8 @@ const AppRoot = () => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AppRoot />
+    <QueryClientProvider client={queryClient}>
+      <AppRoot />
+    </QueryClientProvider>
   </StrictMode>,
 )

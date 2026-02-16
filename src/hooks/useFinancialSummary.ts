@@ -1,45 +1,22 @@
-import { useState, useEffect, useMemo } from 'react';
-import { api } from '../services/api';
-import { type Transaction, type Card, type GastoRecorrente, type Usuario, type Receita } from '../types';
+import { useMemo } from 'react';
+import { useTransacoes } from './api/useTransacoes';
+import { useCartoes } from './api/useCartoes';
+import { useGastosRecorrentes } from './api/useGastosRecorrentes';
+import { useReceitas } from './api/useReceitas';
+import { useUsuarios } from './api/useUsuarios';
 
 export const useFinancialSummary = () => {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [cards, setCards] = useState<Card[]>([]);
-    const [recurringExpenses, setRecurringExpenses] = useState<GastoRecorrente[]>([]);
-    const [receitas, setReceitas] = useState<Receita[]>([]);
-    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: transactions = [], isLoading: loadingTrans, error: errorTrans } = useTransacoes();
+    const { data: cards = [], isLoading: loadingCards, error: errorCards } = useCartoes();
+    const { data: recurringExpenses = [], isLoading: loadingRecur, error: errorRecur } = useGastosRecorrentes();
+    const { data: receitas = [], isLoading: loadingReceitas, error: errorReceitas } = useReceitas();
+    const { data: usuarios = [], isLoading: loadingUsers, error: errorUsers } = useUsuarios();
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [transData, cardsData, recurringData, receitasData, usersData] = await Promise.all([
-                    api.getTransacoes(),
-                    api.getCartoes(),
-                    api.getGastosRecorrentes(),
-                    api.getReceitas(),
-                    api.getUsuarios()
-                ]);
-                setTransactions(transData);
-                setCards(cardsData);
-                setRecurringExpenses(recurringData);
-                setReceitas(receitasData);
-                setUsuarios(usersData);
-            } catch (err) {
-                console.error("Error fetching financial data:", err);
-                setError("Failed to load financial data");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const loading = loadingTrans || loadingCards || loadingRecur || loadingReceitas || loadingUsers;
+    const error = errorTrans || errorCards || errorRecur || errorReceitas || errorUsers ? "Failed to load financial data" : null;
 
     const totalGastos = useMemo(() => {
-        return recurringExpenses.reduce((acc, curr) => acc + curr.valor, 0);
+        return recurringExpenses.reduce((acc, curr) => acc + (curr.valor || 0), 0);
     }, [recurringExpenses]);
 
     const totalCartoes = useMemo(() => {
@@ -47,11 +24,11 @@ export const useFinancialSummary = () => {
     }, [cards]);
 
     const totalLimite = useMemo(() => {
-        return cards.reduce((acc, card) => acc + card.limit, 0);
+        return cards.reduce((acc, card) => acc + (card.limitValue || 0), 0);
     }, [cards]);
 
     const totalDisponivel = useMemo(() => {
-        return cards.reduce((acc, card) => acc + card.available, 0);
+        return cards.reduce((acc, card) => acc + (card.available || 0), 0);
     }, [cards]);
 
     return {

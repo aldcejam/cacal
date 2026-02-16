@@ -4,7 +4,7 @@ import type { Cartao } from "./@types/Cartao";
 
 export const cartaoGateway = {
   findAll: async (input: ServiceInputProps<null, null>) => (
-    await gerarService({
+    await gerarService<Cartao[]>({
       endpoint: `/cartoes`,
       method: "GET",
       options: input

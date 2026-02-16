@@ -1,21 +1,10 @@
 import { Badge } from '../atoms/Badge';
-import { type Card } from '../../types';
-
-interface Transaction {
-    id: string;
-    card: Card;
-    description: string;
-    category: string;
-    value: number;
-    parcels: string;
-    total: number;
-    status?: string; // Optional for compatibility
-    paymentMethod?: string; // Add optional payment method
-}
+import type { Transacao } from '../../api/services/transacao/@types/Transacao';
+import type { Cartao } from '../../api/services/cartao/@types/Cartao';
 
 interface TransactionTableProps {
-    transactions: Transaction[];
-    cards?: Card[]; // Kept for compatibility but not strictly needed for lookup anymore
+    transactions: Transacao[];
+    cards?: Cartao[]; // Unused but updated type just in case
     selectedIds?: string[];
     title?: string;
     onSort?: (key: any) => void;
@@ -25,16 +14,13 @@ interface TransactionTableProps {
 
 export const TransactionTable = ({
     transactions,
-    // cards, // Unused but kept for props compatibility if parents pass it -> actually removing to fix lint
-    // selectedIds = [], // Unused
     title = "Despesas",
     onSort,
     sortConfig,
-    emptyMessage = "Nenhuma despesa encontrada."
 }: TransactionTableProps) => {
 
-    const totalValue = transactions.reduce((acc, t) => acc + t.value, 0);
-    const totalFull = transactions.reduce((acc, t) => acc + t.total, 0);
+    const totalValue = transactions.reduce((acc, t) => acc + (t.value || 0), 0);
+    const totalFull = transactions.reduce((acc, t) => acc + (t.total || 0), 0);
 
     const renderSortIcon = (key: string) => {
         if (!sortConfig || !onSort) return null;
@@ -76,7 +62,6 @@ export const TransactionTable = ({
                             <path d="M12 5v14"></path>
                         </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-muted-foreground">{emptyMessage}</h3>
                 </div>
             ) : (
                 <div className="bg-card rounded-xl border border-border/50 overflow-hidden shadow-sm">
@@ -113,36 +98,36 @@ export const TransactionTable = ({
                                 {transactions.map((t) => {
                                     const card = t.card;
                                     return (
-                                        <tr key={t.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+                                        <tr key={t.id || Math.random().toString()} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                                             <td className="p-4 align-middle font-medium text-foreground">
                                                 <div className="flex items-center gap-2">
-                                                    {card ? (
+                                                    {card && card.bank ? (
                                                         <>
-                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: card.bank.color }}></span>
-                                                            {card.bank.name}
+                                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: card.bank.color || '#333' }}></span>
+                                                            {card.bank.name || 'Banco'}
                                                         </>
                                                     ) : (
                                                         <>
                                                             <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
-                                                            <span className="text-muted-foreground">{t.paymentMethod || 'Outro'}</span>
+                                                            <span className="text-muted-foreground">{'Outro'}</span>
                                                         </>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="p-4 align-middle text-foreground font-medium">{t.description}</td>
+                                            <td className="p-4 align-middle text-foreground font-medium">{t.description || 'Sem descrição'}</td>
                                             <td className="p-4 align-middle">
-                                                <Badge variant={getCategoryColor(t.category) as any}>
-                                                    {t.category}
+                                                <Badge variant={getCategoryColor(t.category || '') as any}>
+                                                    {t.category || 'Geral'}
                                                 </Badge>
                                             </td>
                                             <td className="p-4 align-middle text-right text-foreground font-medium">
-                                                R$ {t.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                R$ {(t.value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                             </td>
                                             <td className="p-4 align-middle text-center text-muted-foreground tabular-nums">
-                                                {t.parcels}
+                                                {t.parcels || '1/1'}
                                             </td>
                                             <td className="p-4 align-middle text-right text-foreground font-semibold">
-                                                R$ {t.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                R$ {(t.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                             </td>
                                         </tr>
                                     );
@@ -160,10 +145,10 @@ export const TransactionTable = ({
                                     </td>
                                 </tr>
                             </tfoot>
-                        </table>
-                    </div>
-                </div>
+                        </table >
+                    </div >
+                </div >
             )}
-        </section>
+        </section >
     );
 };

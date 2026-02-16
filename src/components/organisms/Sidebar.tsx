@@ -1,4 +1,5 @@
-import type { Page, Usuario } from '../../types';
+import type { Page } from '../../types';
+import type { Usuario } from '../../api/services/usuario/@types/Usuario';
 
 // Icons wrapper for cleaner usage
 const Icons = {
@@ -107,7 +108,7 @@ export const Sidebar = ({
                                 onClick={() => onNavigate(item.page)}
                                 title={!isOpen ? item.name : ''}
                                 className={`
-                                    w-full flex items-center rounded-xl text-sm font-medium transition-all duration-300 group relative overflow-hidden
+                                    w-full flex items-center rounded-xl cursor-pointer text-sm font-medium transition-all duration-300 group relative overflow-hidden
                                     ${isActive
                                         ? 'text-white shadow-lg shadow-emerald-900/20'
                                         : 'text-muted-foreground hover:text-white hover:bg-white/5'}
@@ -152,7 +153,7 @@ export const Sidebar = ({
                             <div className="relative shrink-0">
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-violet-500 p-[2px]">
                                     <div className="w-full h-full rounded-full bg-black/50 backdrop-blur-sm overflow-hidden flex items-center justify-center text-white font-bold">
-                                        {currentUser.name.charAt(0).toUpperCase()}
+                                        {(currentUser.name || 'U').charAt(0).toUpperCase()}
                                     </div>
                                 </div>
                                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full shadow-sm"></div>
@@ -160,10 +161,10 @@ export const Sidebar = ({
 
                             <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
                                 <p className="text-sm font-semibold truncate text-white group-hover:text-emerald-400 transition-colors">
-                                    {currentUser.name}
+                                    {currentUser.name || 'Usuário'}
                                 </p>
                                 <p className="text-xs text-muted-foreground truncate opacity-80">
-                                    {currentUser.email}
+                                    {currentUser.email || 'sem@email.com'}
                                 </p>
                             </div>
 

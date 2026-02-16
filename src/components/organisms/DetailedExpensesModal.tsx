@@ -7,7 +7,10 @@ import { TransactionTable } from './TransactionTable';
 import { Typography } from '../atoms/Typography';
 import { Button } from '../atoms/Button';
 
-import { type Usuario, type Card, type GastoRecorrente, type Transaction } from '../../types';
+import type { Usuario } from '../../api/services/usuario/@types/Usuario';
+import type { Cartao } from '../../api/services/cartao/@types/Cartao';
+import type { GastoRecorrente } from '../../api/services/gastoRecorrente/@types/GastoRecorrente';
+import type { Transacao } from '../../api/services/transacao/@types/Transacao';
 
 // Helper for color generation
 const stringToColor = (str: string) => {
@@ -24,9 +27,9 @@ interface DetailedExpensesModalProps {
     onClose: () => void;
     initialUserId: string | null;
     usuarios: Usuario[];
-    creditCards: Card[];
+    creditCards: Cartao[];
     recurringExpenses: GastoRecorrente[];
-    transactions: Transaction[];
+    transactions: Transacao[];
 }
 
 export const DetailedExpensesModal = ({
@@ -49,7 +52,10 @@ export const DetailedExpensesModal = ({
             setSelectedUserIds([initialUserId]);
         } else if (isOpen && !initialUserId && selectedUserIds.length === 0 && usuarios.length > 0) {
             // Default to all users if none selected
-            setSelectedUserIds([usuarios[0].id]);
+            const firstId = usuarios[0].id;
+            if (firstId) {
+                setSelectedUserIds([firstId]);
+            }
         }
     }, [isOpen, initialUserId, usuarios]);
 
@@ -63,11 +69,11 @@ export const DetailedExpensesModal = ({
 
     // Filter Data based on selectedUserIds
     const filteredCreditCards = useMemo(() => {
-        return creditCards.filter((c) => selectedUserIds.includes(c.user.id));
+        return creditCards.filter((c) => c.user?.id && selectedUserIds.includes(c.user.id));
     }, [selectedUserIds, creditCards]);
 
     const filteredRecurringExpenses = useMemo(() => {
-        return recurringExpenses.filter((g) => selectedUserIds.includes(g.user.id));
+        return recurringExpenses.filter((g) => g.user?.id && selectedUserIds.includes(g.user.id));
     }, [selectedUserIds, recurringExpenses]);
 
     // Cards Selection Logic for Table
@@ -75,11 +81,11 @@ export const DetailedExpensesModal = ({
 
     useEffect(() => {
         // Init with all visible credit cards
-        const cardIds = filteredCreditCards.map((c) => c.id);
+        const cardIds = filteredCreditCards.map((c) => c.id).filter(Boolean) as string[];
 
         // Init with all visible recurring GROUPS
         // We need to know which USERS have recurring expenses in the filtered list
-        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g) => g.user.id)));
+        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g) => g.user?.id).filter(Boolean))) as string[];
         const recurringGroupIds = usersWithRecurring.map((userId) => `recurring-group-${userId}`);
 
         setSelectedCardIds([...cardIds, ...recurringGroupIds]);
@@ -94,9 +100,9 @@ export const DetailedExpensesModal = ({
     };
 
     // Derived Selection State (for buttons)
-    const allCardIds = useMemo(() => filteredCreditCards.map((c) => c.id), [filteredCreditCards]);
+    const allCardIds = useMemo(() => filteredCreditCards.map((c) => c.id).filter(Boolean) as string[], [filteredCreditCards]);
     const allRecurringGroupIds = useMemo(() => {
-        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g) => g.user.id)));
+        const usersWithRecurring = Array.from(new Set(filteredRecurringExpenses.map((g) => g.user?.id).filter(Boolean))) as string[];
         return usersWithRecurring.map((userId) => `recurring-group-${userId}`);
     }, [filteredRecurringExpenses]);
 
@@ -146,8 +152,8 @@ export const DetailedExpensesModal = ({
 
         // 1. Credit Card Transactions
         // Filter by actually selected card IDs
-        const activeCardIds = filteredCreditCards.map((c) => c.id).filter((id) => selectedCardIds.includes(id));
-        const relevantTransactions = transactions.filter((t) => activeCardIds.includes(t.card.id));
+        const activeCardIds = filteredCreditCards.map((c) => c.id).filter((id) => id && selectedCardIds.includes(id));
+        const relevantTransactions = transactions.filter((t) => t.card?.id && activeCardIds.includes(t.card.id));
         combined.push(...relevantTransactions);
 
         // 2. Recurring Transactions
@@ -155,16 +161,16 @@ export const DetailedExpensesModal = ({
         const activeRecurringGroupIds = selectedCardIds.filter(id => id.startsWith('recurring-group-'));
         const activeUserIds = activeRecurringGroupIds.map(id => id.replace('recurring-group-', ''));
 
-        const activeRecurring = filteredRecurringExpenses.filter((g) => activeUserIds.includes(g.user.id));
+        const activeRecurring = filteredRecurringExpenses.filter((g) => g.user?.id && activeUserIds.includes(g.user.id));
 
         const recurringAsTransactions = activeRecurring.map((g) => ({
             id: `rec-${g.id}`,
             card: { bank: { name: 'Recorrente', color: '#10b981' }, id: 'recurring' }, // Mock object for compat
             description: g.descricao,
             category: g.categoria,
-            value: g.valor,
+            value: g.valor || 0,
             parcels: 'Recorrente',
-            total: g.valor,
+            total: g.valor || 0,
             status: 'approved',
             isRecurring: true,
             paymentMethod: g.pagamento // Passed to table
@@ -181,12 +187,15 @@ export const DetailedExpensesModal = ({
         const groups: { [key: string]: { userId: string, total: number, count: number, user: any } } = {};
 
         filteredRecurringExpenses.forEach((g) => {
-            if (!groups[g.user.id]) {
+            const userId = g.user?.id;
+            if (!userId) return;
+
+            if (!groups[userId]) {
                 const user = g.user;
-                groups[g.user.id] = { userId: g.user.id, total: 0, count: 0, user };
+                groups[userId] = { userId: userId, total: 0, count: 0, user };
             }
-            groups[g.user.id].total += g.valor;
-            groups[g.user.id].count += 1;
+            groups[userId].total += (g.valor || 0);
+            groups[userId].count += 1;
         });
 
         return Object.values(groups);
@@ -204,12 +213,15 @@ export const DetailedExpensesModal = ({
                 {/* 1. User Filter */}
                 <div className="flex justify-center gap-4 py-2 overflow-x-auto">
                     {usuarios.map((user) => {
-                        const isSelected = selectedUserIds.includes(user.id);
-                        const userColor = stringToColor(user.name);
+                        const userId = user.id;
+                        if (!userId) return null;
+
+                        const isSelected = selectedUserIds.includes(userId);
+                        const userColor = stringToColor(user.name || 'User');
                         return (
                             <div
-                                key={user.id}
-                                onClick={() => handleToggleUser(user.id)}
+                                key={userId}
+                                onClick={() => handleToggleUser(userId)}
                                 className={`
                                     flex flex-col items-center gap-2 cursor-pointer transition-all duration-200
                                     ${isSelected ? 'opacity-100 scale-105' : 'opacity-40 hover:opacity-70 hover:scale-105'}
@@ -223,9 +235,9 @@ export const DetailedExpensesModal = ({
                                     `}
                                     style={{ backgroundColor: userColor }}
                                 >
-                                    {user.name.charAt(0).toUpperCase()}
+                                    {(user.name || 'U').charAt(0).toUpperCase()}
                                 </div>
-                                <span className="text-xs font-medium text-foreground">{user.name.split(' ')[0]}</span>
+                                <span className="text-xs font-medium text-foreground">{(user.name || 'Usuário').split(' ')[0]}</span>
                             </div>
                         )
                     })}
@@ -268,16 +280,19 @@ export const DetailedExpensesModal = ({
                                 Cartões de Crédito ({filteredCreditCards.length})
                             </Typography>
                             <Carousel>
-                                {filteredCreditCards.map((card) => (
-                                    <div key={card.id} className="w-[300px] shrink-0 p-1">
-                                        <CreditCard
-                                            card={card}
-                                            isSelected={selectedCardIds.includes(card.id)}
-                                            onClick={() => handleToggleCard(card.id)}
-                                            showProgressBar={true}
-                                        />
-                                    </div>
-                                ))}
+                                {filteredCreditCards.map((card) => {
+                                    const cardId = card.id || Math.random().toString();
+                                    return (
+                                        <div key={cardId} className="w-[300px] shrink-0 p-1">
+                                            <CreditCard
+                                                card={card}
+                                                isSelected={selectedCardIds.includes(cardId)}
+                                                onClick={() => handleToggleCard(cardId)}
+                                                showProgressBar={true}
+                                            />
+                                        </div>
+                                    );
+                                })}
                             </Carousel>
                         </div>
                     )}

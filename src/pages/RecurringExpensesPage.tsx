@@ -1,45 +1,30 @@
 import { useState, useMemo, useEffect } from 'react';
-import { api } from '../services/api';
-import { type GastoRecorrente, type Usuario } from '../types';
+import { useGastosRecorrentes } from '../hooks/api/useGastosRecorrentes';
+import { useUsuarios } from '../hooks/api/useUsuarios';
+import { type GastoRecorrente } from '../api/services/gastoRecorrente/@types/GastoRecorrente';
 
 import { UserSelector } from '../components/organisms/UserSelector';
 import { MetricCard } from '../components/molecules/MetricCard';
 import { RecurringExpensesTable } from '../components/organisms/RecurringExpensesTable';
 
 export default function RecurringExpensesPage() {
-    const [gastosRecorrentes, setGastosRecorrentes] = useState<GastoRecorrente[]>([]);
-    const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: gastosRecorrentes = [], isLoading: loadingGastos, error: errorGastos } = useGastosRecorrentes();
+    const { data: usuarios = [], isLoading: loadingUsers, error: errorUsers } = useUsuarios();
+
+    const loading = loadingGastos || loadingUsers;
+    const error = errorGastos || errorUsers ? "Failed to load data" : null;
 
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [sortConfig, setSortConfig] = useState<any>({ key: null, direction: 'asc' });
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [gastosData, usersData] = await Promise.all([
-                    api.getGastosRecorrentes(),
-                    api.getUsuarios()
-                ]);
-
-                setGastosRecorrentes(gastosData);
-                setUsuarios(usersData);
-
-                if (usersData.length > 0 && selectedUserIds.length === 0) {
-                    setSelectedUserIds([usersData[0].id]);
-                }
-            } catch (err) {
-                console.error("Error fetching recurring expenses data:", err);
-                setError("Failed to load data");
-            } finally {
-                setLoading(false);
+        if (usuarios.length > 0 && selectedUserIds.length === 0) {
+            const firstId = usuarios[0].id;
+            if (firstId) {
+                setSelectedUserIds([firstId]);
             }
-        };
-
-        fetchData();
-    }, []);
+        }
+    }, [usuarios]);
 
     const currentUser = usuarios.length > 0 ? usuarios[0] : null;
 
@@ -63,19 +48,22 @@ export default function RecurringExpensesPage() {
 
     // --- Filtering & Sorting ---
     const filteredGastos = useMemo(() => {
-        return gastosRecorrentes.filter(g => selectedUserIds.includes(g.user.id));
+        return gastosRecorrentes.filter(g => g.user?.id && selectedUserIds.includes(g.user.id));
     }, [selectedUserIds, gastosRecorrentes]);
 
     const sortedGastos = useMemo(() => {
         let sortableItems = [...filteredGastos];
         if (sortConfig.key !== null) {
             sortableItems.sort((a, b) => {
-                // @ts-ignore - simple sort
-                if (a[sortConfig.key] < b[sortConfig.key]) {
+                // @ts-ignore - dynamic sort
+                const valA = a[sortConfig.key] || '';
+                // @ts-ignore - dynamic sort
+                const valB = b[sortConfig.key] || '';
+
+                if (valA < valB) {
                     return sortConfig.direction === 'asc' ? -1 : 1;
                 }
-                // @ts-ignore - simple sort
-                if (a[sortConfig.key] > b[sortConfig.key]) {
+                if (valA > valB) {
                     return sortConfig.direction === 'asc' ? 1 : -1;
                 }
                 return 0;
@@ -84,7 +72,7 @@ export default function RecurringExpensesPage() {
         return sortableItems;
     }, [filteredGastos, sortConfig]);
 
-    const totalGastos = filteredGastos.reduce((acc, g) => acc + g.valor, 0);
+    const totalGastos = filteredGastos.reduce((acc, g) => acc + (g.valor || 0), 0);
 
     if (loading) {
         return (

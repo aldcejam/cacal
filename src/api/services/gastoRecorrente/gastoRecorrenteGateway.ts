@@ -4,7 +4,7 @@ import type { GastoRecorrente } from "./@types/GastoRecorrente";
 
 export const gastoRecorrenteGateway = {
   findAll: async (input: ServiceInputProps<null, null>) => (
-    await gerarService({
+    await gerarService<GastoRecorrente[]>({
       endpoint: `/gastosRecorrentes`,
       method: "GET",
       options: input

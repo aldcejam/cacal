@@ -1,5 +1,5 @@
 import React from 'react';
-import { type Usuario } from '../../types';
+import type { Usuario } from '../../api/services/usuario/@types/Usuario';
 
 interface UserSelectorProps {
     selectedUserIds: string[];
@@ -59,13 +59,14 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {availableUsers.map((user) => {
-                    const isSelected = selectedUserIds.includes(user.id);
-                    const userColor = stringToColor(user.name);
+                    const userId = user.id || 'unknown';
+                    const isSelected = selectedUserIds.includes(userId);
+                    const userColor = stringToColor(user.name || 'User');
 
                     return (
                         <div
-                            key={user.id}
-                            onClick={() => onToggleUser(user.id)}
+                            key={userId}
+                            onClick={() => userId !== 'unknown' && onToggleUser(userId)}
                             className={`
                 rounded-xl p-5 border-2 transition-all duration-300 cursor-pointer select-none
                 ${isSelected
@@ -79,17 +80,17 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
                                         className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg"
                                         style={{ backgroundColor: userColor }}
                                     >
-                                        {user.name.charAt(0).toUpperCase()}
+                                        {(user.name || 'U').charAt(0).toUpperCase()}
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-foreground">{user.name}</h3>
+                                        <h3 className="font-semibold text-foreground">{user.name || 'Usuário'}</h3>
                                     </div>
                                 </div>
                                 {isSelected && (
                                     <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(16,185,129,0.8)]"></div>
                                 )}
                             </div>
-                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                            <p className="text-xs text-muted-foreground truncate">{user.email || ''}</p>
                         </div>
                     );
                 })}

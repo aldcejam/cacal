@@ -4,7 +4,7 @@ import type { Receita } from "./@types/Receita";
 
 export const receitaGateway = {
   findAll: async (input: ServiceInputProps<null, null>) => (
-    await gerarService({
+    await gerarService<Receita[]>({
       endpoint: `/receitas`,
       method: "GET",
       options: input

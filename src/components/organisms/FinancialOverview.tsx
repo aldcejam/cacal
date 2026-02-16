@@ -1,13 +1,17 @@
 import { useMemo } from 'react';
-import { type Receita, type Transaction, type GastoRecorrente, type Usuario, type Card } from '../../types';
+import type { Receita } from '../../api/services/receita/@types/Receita';
+import type { Transacao } from '../../api/services/transacao/@types/Transacao';
+import type { GastoRecorrente } from '../../api/services/gastoRecorrente/@types/GastoRecorrente';
+import type { Usuario } from '../../api/services/usuario/@types/Usuario';
+import type { Cartao } from '../../api/services/cartao/@types/Cartao';
 
 interface FinancialOverviewProps {
     onUserClick?: (userId: string) => void;
     receitas: Receita[];
-    transactions: Transaction[];
+    transactions: Transacao[];
     recurringExpenses: GastoRecorrente[];
     usuarios: Usuario[];
-    cards: Card[];
+    cards: Cartao[];
 }
 
 // Helper for color generation
@@ -30,11 +34,11 @@ export const FinancialOverview = ({
 }: FinancialOverviewProps) => {
     // 1. Calculate Family Totals
     const familyTotals = useMemo(() => {
-        const totalIncome = receitas.reduce((acc, r) => acc + r.valor, 0);
+        const totalIncome = receitas.reduce((acc, r) => acc + (r.valor || 0), 0);
 
-        const totalRecurring = recurringExpenses.reduce((acc, g) => acc + g.valor, 0);
+        const totalRecurring = recurringExpenses.reduce((acc, g) => acc + (g.valor || 0), 0);
 
-        const totalCreditCard = transactions.reduce((acc, t) => acc + t.value, 0);
+        const totalCreditCard = transactions.reduce((acc, t) => acc + (t.value || 0), 0);
 
         const totalExpenses = totalRecurring + totalCreditCard;
         const balance = totalIncome - totalExpenses;
@@ -45,27 +49,30 @@ export const FinancialOverview = ({
     // 2. Calculate Per User
     const userStats = useMemo(() => {
         return usuarios.map((user) => {
+            const userId = user.id;
+            if (!userId) return null; // Skip users without ID
+
             const userIncome = receitas
-                .filter((r) => r.user.id === user.id)
-                .reduce((acc, r) => acc + r.valor, 0);
+                .filter((r) => r.user?.id === userId)
+                .reduce((acc, r) => acc + (r.valor || 0), 0);
 
             const userRecurring = recurringExpenses
-                .filter((g) => g.user.id === user.id)
-                .reduce((acc, g) => acc + g.valor, 0);
+                .filter((g) => g.user?.id === userId)
+                .reduce((acc, g) => acc + (g.valor || 0), 0);
 
             // Find user's cards
             const userCardIds = cards
-                .filter((c) => c.user.id === user.id)
-                .map((c) => c.id);
+                .filter((c) => c.user?.id === userId && c.id)
+                .map((c) => c.id!);
 
             const userCreditCard = transactions
-                .filter((t) => userCardIds.includes(t.card.id))
-                .reduce((acc, t) => acc + t.value, 0);
+                .filter((t) => t.card?.id && userCardIds.includes(t.card.id))
+                .reduce((acc, t) => acc + (t.value || 0), 0);
 
             const totalExpenses = userRecurring + userCreditCard;
             const balance = userIncome - totalExpenses;
 
-            const userColor = stringToColor(user.name);
+            const userColor = stringToColor(user.name || 'User');
 
             return {
                 user,
@@ -74,7 +81,7 @@ export const FinancialOverview = ({
                 userBalance: balance,
                 userColor
             };
-        });
+        }).filter(Boolean) as any[]; // Filter out nulls
     }, [usuarios, receitas, recurringExpenses, cards, transactions]);
 
     return (
@@ -130,10 +137,10 @@ export const FinancialOverview = ({
                     >
                         <div className="flex items-center gap-3 mb-4 border-b border-border/50 pb-3">
                             <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm transition-transform group-hover:scale-110" style={{ backgroundColor: userColor }}>
-                                {user.name.charAt(0).toUpperCase()}
+                                {(user.name || 'U').charAt(0).toUpperCase()}
                             </div>
                             <div className="overflow-hidden">
-                                <h4 className="font-semibold text-foreground truncate">{user.name}</h4>
+                                <h4 className="font-semibold text-foreground truncate">{user.name || 'Usuário'}</h4>
                             </div>
                         </div>
 

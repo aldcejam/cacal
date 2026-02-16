@@ -1,9 +1,8 @@
 import { CreditCard } from '../molecules/CreditCard';
-
-import { type Card } from '../../types';
+import type { Cartao } from '../../api/services/cartao/@types/Cartao';
 
 interface CreditCardListProps {
-    cards: Card[];
+    cards: Cartao[];
     selectedIds: string[];
     onToggleCard: (id: string) => void;
 }
@@ -24,10 +23,10 @@ export const CreditCardList = ({ cards, selectedIds, onToggleCard }: CreditCardL
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {cards.map((card) => (
                     <CreditCard
-                        key={card.id}
+                        key={card.id || Math.random().toString()}
                         card={card}
-                        isSelected={selectedIds.includes(card.id)}
-                        onClick={() => onToggleCard(card.id)}
+                        isSelected={card.id ? selectedIds.includes(card.id) : false}
+                        onClick={() => card.id && onToggleCard(card.id)}
                         showProgressBar={false}
                     />
                 ))}

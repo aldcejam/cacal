@@ -4,7 +4,7 @@ import type { Usuario } from "./@types/Usuario";
 
 export const usuarioGateway = {
   findAll: async (input: ServiceInputProps<null, null>) => (
-    await gerarService({
+    await gerarService<Usuario[]>({
       endpoint: `/usuarios`,
       method: "GET",
       options: input

@@ -1,22 +1,8 @@
 import { Typography } from '../atoms/Typography';
-
-// Using a simplified interface based on usage
-interface CardData {
-    id: string;
-    bank: {
-        name: string;
-        color: string;
-    };
-    lastDigits: string;
-    limit: number;
-    available: number;
-    closing?: number;
-    due?: number;
-    percent?: number; // Optional for progress bar
-}
+import type { Cartao } from '../../api/services/cartao/@types/Cartao';
 
 interface CreditCardProps {
-    card: CardData;
+    card: Cartao & { percent?: number; closing?: number; due?: number };
     isSelected?: boolean;
     onClick?: () => void;
     showProgressBar?: boolean;
@@ -41,7 +27,7 @@ const darkenColor = (hex: string, percent: number) => {
 };
 
 export const CreditCard = ({ card, isSelected = false, onClick, showProgressBar = false }: CreditCardProps) => {
-    const primaryColor = card.bank.color;
+    const primaryColor = card.bank?.color || '#333';
     const secondaryColor = darkenColor(primaryColor, 30);
 
     const gradientStyle = {
@@ -63,11 +49,11 @@ export const CreditCard = ({ card, isSelected = false, onClick, showProgressBar 
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-5 bg-white/20 rounded-md backdrop-blur-sm border border-white/10"></div>
                         <Typography variant="body-base" weight="semibold" className="text-white">
-                            {card.bank.name}
+                            {card.bank?.name || 'Banco'}
                         </Typography>
                     </div>
                     <Typography variant="body-sm" className="font-mono opacity-80">
-                        •••• {card.lastDigits}
+                        •••• {card.lastDigits || '0000'}
                     </Typography>
                 </div>
 
@@ -76,13 +62,13 @@ export const CreditCard = ({ card, isSelected = false, onClick, showProgressBar 
                         Limite Total
                     </Typography>
                     <Typography variant="h3" weight="bold" className="tracking-tight">
-                        R$ {card.limit.toLocaleString('pt-BR')}
+                        R$ {(card.limitValue || 0).toLocaleString('pt-BR')}
                     </Typography>
                 </div>
 
                 <div className="flex justify-between items-end">
                     <Typography variant="body-sm" className="opacity-90 font-medium">
-                        Disponível: R$ {card.available.toLocaleString('pt-BR')}
+                        Disponível: R$ {(card.available || 0).toLocaleString('pt-BR')}
                     </Typography>
                 </div>
 

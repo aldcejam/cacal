@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { api } from '../services/api';
-import { type Receita } from '../types';
+import { useReceitas } from '../hooks/api/useReceitas';
+import { useUsuarios } from '../hooks/api/useUsuarios';
+import type { Receita } from '../api/services/receita/@types/Receita';
 
 import { UserSelector } from '../components/organisms/UserSelector';
 import { Button } from '../components/atoms/Button';
@@ -43,6 +44,7 @@ const Header = () => (
     </header>
 );
 
+// IncomesTable Component (Defined locally)
 const IncomesTable = ({
     receitas,
     showUserColumn
@@ -50,10 +52,11 @@ const IncomesTable = ({
     receitas: Receita[],
     showUserColumn: boolean
 }) => {
-    const totalValue = receitas.reduce((acc, r) => acc + r.valor, 0);
+    const totalValue = receitas.reduce((acc, r) => acc + (r.valor || 0), 0);
 
     return (
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* ... Header and table structure same ... */}
             <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
                     <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -87,28 +90,28 @@ const IncomesTable = ({
                             <tbody className="[&_tr:last-child]:border-0">
                                 {receitas.map((receita) => {
                                     const user = receita.user;
-                                    const userColor = stringToColor(user.name);
+                                    const userColor = stringToColor(user?.name || 'User');
                                     return (
-                                        <tr key={receita.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
+                                        <tr key={receita.id || Math.random().toString()} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                                             {showUserColumn && user && (
                                                 <td className="p-4 align-middle">
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: userColor }}>
-                                                            {user.name.charAt(0).toUpperCase()}
+                                                            {(user.name || 'U').charAt(0).toUpperCase()}
                                                         </div>
-                                                        <span className="text-foreground font-medium text-sm">{user.name}</span>
+                                                        <span className="text-foreground font-medium text-sm">{user.name || 'Usuário'}</span>
                                                     </div>
                                                 </td>
                                             )}
                                             <td className="p-4 align-middle text-foreground font-medium">{receita.descricao}</td>
                                             <td className="p-4 align-middle">
-                                                <Badge variant={getCategoryColor(receita.categoria) as any}>{receita.categoria}</Badge>
+                                                <Badge variant={getCategoryColor(receita.categoria || '') as any}>{receita.categoria}</Badge>
                                             </td>
                                             <td className="p-4 align-middle text-muted-foreground">
                                                 Dia {receita.diaRecebimento}
                                             </td>
                                             <td className="p-4 align-middle text-right text-emerald-500 font-bold">
-                                                R$ {receita.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                R$ {(receita.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                             </td>
                                             <td className="p-4 align-middle text-center">
                                                 <button className="p-2 hover:bg-secondary rounded-lg transition-colors text-muted-foreground hover:text-foreground">
@@ -138,39 +141,20 @@ const IncomesTable = ({
 };
 
 export default function IncomesPage() {
-    const [receitas, setReceitas] = useState<Receita[]>([]);
-    const [usuarios, setUsuarios] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: receitas = [], isLoading: loadingReceitas, error: errorReceitas } = useReceitas();
+    const { data: usuarios = [], isLoading: loadingUsers, error: errorUsers } = useUsuarios();
+
+    const loading = loadingReceitas || loadingUsers;
+    const error = errorReceitas || errorUsers ? "Failed to load incomes data" : null;
 
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-    // Removed currentUser logic that depended on getUsuarioAtual from mocks
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [receitasData, usersData] = await Promise.all([
-                    api.getReceitas(),
-                    api.getUsuarios()
-                ]);
-
-                setReceitas(receitasData);
-                setUsuarios(usersData);
-
-                if (usersData.length > 0 && selectedUserIds.length === 0) {
-                    setSelectedUserIds([usersData[0].id]);
-                }
-            } catch (err) {
-                console.error("Error fetching incomes data:", err);
-                setError("Failed to load incomes data");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
+        if (usuarios.length > 0 && selectedUserIds.length === 0) {
+            const firstId = usuarios[0].id;
+            if (firstId) setSelectedUserIds([firstId]);
+        }
+    }, [usuarios]);
 
     const currentUser = usuarios.length > 0 ? usuarios[0] : null;
 
@@ -184,10 +168,10 @@ export default function IncomesPage() {
     };
 
     const filteredReceitas = useMemo(() => {
-        return receitas.filter(r => selectedUserIds.includes(r.user.id));
+        return receitas.filter(r => r.user?.id && selectedUserIds.includes(r.user.id));
     }, [selectedUserIds, receitas]);
 
-    const totalIncome = filteredReceitas.reduce((acc, r) => acc + r.valor, 0);
+    const totalIncome = filteredReceitas.reduce((acc, r) => acc + (r.valor || 0), 0);
 
     if (loading) {
         return (

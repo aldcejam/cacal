@@ -48,7 +48,7 @@ export async function gerarService<RESPONSE = undefined>({ endpoint, method, con
 
 const api = axios.create({
     baseURL: import.meta.env.PROD
-        ? `${window.location.origin}/api` : import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8080/api',
+        ? `${window.location.origin}/api` : import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8080/',
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
