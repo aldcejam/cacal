@@ -11,6 +11,7 @@ import DesignSystemPage from './pages/DesignSystem';
 import { MainLayout } from './components/templates/MainLayout'
 import type { Page, Usuario } from './types';
 import { api } from './services/api';
+import { ToastContainer } from 'react-toastify';
 
 const AppRoot = () => {
   const [currentPage, setCurrentPage] = useState<Page>('visao-geral');
@@ -60,6 +61,7 @@ const AppRoot = () => {
 
   return (
     <MainLayout currentPage={currentPage} onNavigate={setCurrentPage} currentUser={currentUser}>
+      <ToastContainer />
       {renderPage()}
     </MainLayout>
   );
